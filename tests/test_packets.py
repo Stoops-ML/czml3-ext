@@ -1,12 +1,13 @@
 from importlib import resources as impresources
 
 import numpy as np
+import pytest
 from czml3 import Document, Preamble
 
 from czml3_ext.packets import grid, reset_unique_ID, sensor_polyline
 
 from . import saved_czmls
-import pytest
+
 
 @pytest.mark.skip(reason="Make a better test")
 def test_1sensor():
@@ -23,6 +24,7 @@ def test_1sensor():
     with (impresources.files(saved_czmls) / "sensor_ddm.czml").open("r") as f:
         expected_str = f.read().strip()
     assert result == expected_str
+
 
 @pytest.mark.skip(reason="Make a better test")
 def test_grid():
