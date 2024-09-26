@@ -22,6 +22,9 @@ def test_border_not_found():
 def test_get_border():
     for b in available_borders:
         get_border(b)
+        get_border(b.upper())
+        get_border(b.lower())
+        get_border(b.removeprefix(".border"))
 
 
 def test_get_billboard():
