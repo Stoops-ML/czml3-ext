@@ -103,7 +103,7 @@ def get_contours(
     # get holes and coverage polygons
     dd_LL_coverages: list[npt.NDArray[np.floating[TNP]]] = []
     dd_LL_holes: list[npt.NDArray[np.floating[TNP]]] = []
-    for contour, dd_LL_contour in zip(contours, dd_LL_contours):
+    for contour, dd_LL_contour in zip(contours, dd_LL_contours, strict=False):
         rr, cc = draw.polygon(contour[:, 0], contour[:, 1])
         if rr.size == 0 or cc.size == 0:
             raise ValueError("Contour has no size")
