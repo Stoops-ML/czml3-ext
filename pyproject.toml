@@ -179,4 +179,5 @@ legacy_tox_ini = """
     commands =
         ruff check
         ruff format --diff
+        python -m build --wheel
 """
