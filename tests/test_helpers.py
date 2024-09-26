@@ -30,3 +30,6 @@ def test_get_border():
 def test_get_billboard():
     for b in available_billboards:
         get_billboard(b)
+        get_billboard(b.upper())
+        get_billboard(b.lower())
+        get_billboard(b.removeprefix(".billboard"))
