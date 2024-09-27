@@ -6,8 +6,8 @@ import numpy as np
 import numpy.typing as npt
 from skimage import draw, measure
 
-from . import borders
-from .borders import (
+from . import data
+from .data import (
     BILLBOARD_SUFFIX,
     BORDER_SUFFIX,
     available_billboards,
@@ -28,7 +28,7 @@ def get_billboard(file_name: str | Path) -> str:
     if file_name.suffix != BILLBOARD_SUFFIX:
         file_name = Path("".join((file_name.name, BILLBOARD_SUFFIX)))
     try:
-        with (impresources.files(borders) / str(file_name)).open("r") as f:
+        with (impresources.files(data) / str(file_name)).open("r") as f:
             return f.read().strip()
     except FileNotFoundError:
         raise BillboardNotFound(
@@ -47,7 +47,7 @@ def get_border(file_name: str | Path) -> npt.NDArray[np.float64]:
     if file_name.suffix != BORDER_SUFFIX:
         file_name = Path("".join((file_name.name, BORDER_SUFFIX)))
     try:
-        with (impresources.files(borders) / str(file_name)).open("r") as f:
+        with (impresources.files(data) / str(file_name)).open("r") as f:
             dd_LL = np.fromstring(f.read().strip(), sep=",").reshape((-1, 2))[:, [1, 0]]
         ddm_LLA = np.zeros((dd_LL.shape[0], 3, 1), dtype=np.float64)
         ddm_LLA[:, :2] = dd_LL.reshape((-1, 2, 1))

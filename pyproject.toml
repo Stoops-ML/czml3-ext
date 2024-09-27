@@ -68,7 +68,7 @@ version = {attr = "czml3_ext.__version__"}
 
 [tool.setuptools.package-data]
 czml3_ext = [
-    "src/czml3_ext/borders/afghanistan.border",
+    "src/czml3_ext/data/*.border",
     "src/czml3_ext/data/*.billboard",
     "tests/saved_czmls/*.czml",
 ]

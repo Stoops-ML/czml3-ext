@@ -1,6 +1,6 @@
 import pytest
 
-from czml3_ext.borders import available_billboards, available_borders
+from czml3_ext.data import available_billboards, available_borders
 from czml3_ext.errors import BillboardNotFound, BorderNotFound
 from czml3_ext.helpers import get_billboard, get_border
 
