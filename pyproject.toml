@@ -70,9 +70,9 @@ version = {attr = "czml3_ext.__version__"}
 where = ["src", "tests"]
 
 [tool.setuptools.package-data]
-czml3-ext = [
-    "src/czml3_ext/data/*.border",
-    "src/czml3_ext/data/*.billboard",
+czml3_ext = [
+    "*.border",
+    "*.billboard",
     "tests/saved_czmls/*.czml",
 ]
 
