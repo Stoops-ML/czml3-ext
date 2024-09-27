@@ -66,6 +66,9 @@ Issues = "https://github.com/Stoops-ML/czml3-ext/issues"
 [tool.setuptools.dynamic]
 version = {attr = "czml3_ext.__version__"}
 
+[tool.setuptools.packages.find]
+where = ["src", "tests"]
+
 [tool.setuptools.package-data]
 czml3_ext = [
     "src/czml3_ext/data/*.border",
