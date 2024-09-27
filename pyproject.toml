@@ -68,8 +68,8 @@ version = {attr = "czml3_ext.__version__"}
 
 [tool.setuptools.package-data]
 czml3_ext = [
-    "czml_ext/data/*border",
-    "czml_ext/data/*billboard",
+    "czml_ext/data/*.border",
+    "czml_ext/data/*.billboard",
     "tests/saved_czmls/*.czml",
 ]
 
