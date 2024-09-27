@@ -1,4 +1,7 @@
 # czml3-ext
+![PyPI - Version](https://img.shields.io/pypi/v/czml3_ext)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/czml3_ext)
+![PyPI - License](https://img.shields.io/pypi/l/czml3_ext)
 
 This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [czml3](https://github.com/poliastro/czml3) for more information about CZML properties.
 
