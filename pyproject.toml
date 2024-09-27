@@ -71,8 +71,8 @@ where = ["src", "tests"]
 
 [tool.setuptools.package-data]
 czml3_ext = [
-    "*.border",
-    "*.billboard",
+    "src/czml3_ext/data/*.border",
+    "src/czml3_ext/data/*.billboard",
     "tests/saved_czmls/*.czml",
 ]
 
