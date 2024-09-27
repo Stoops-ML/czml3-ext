@@ -1,6 +1,6 @@
 
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["wheel", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Create packets of CZML3"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
@@ -50,6 +50,7 @@ dev = [
     "mypy>=1.10.1",
     "tox>=4.16.0",
     "pytest-cov>=5.0.0",
+    "build",
 ]
 examples = [
     "jupyterlab>=4.2.3",
@@ -65,10 +66,13 @@ Issues = "https://github.com/Stoops-ML/czml3-ext/issues"
 [tool.setuptools.dynamic]
 version = {attr = "czml3_ext.__version__"}
 
+[tool.setuptools.packages.find]
+where = ["src", "tests"]
+
 [tool.setuptools.package-data]
-mypkg = [
-    "czml_ext/data/*border",
-    "czml_ext/data/*billboard",
+czml3_ext = [
+    "src/czml3_ext/data/*.border",
+    "src/czml3_ext/data/*.billboard",
     "tests/saved_czmls/*.czml",
 ]
 
@@ -142,20 +146,16 @@ ignore_missing_imports = true
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = quality, py{38,39,310,311,312}
+    envlist = quality, py{310,311,312}
 
     [gh-actions]
     python =
-        3.8: py38
-        3.9: py39
         3.10: py310
         3.11: py311, quality
         3.12: py312
 
     [testenv]
     basepython =
-        py38: {env:PYTHON:python3.8}
-        py39: {env:PYTHON:python3.9}
         py310: {env:PYTHON:python3.10}
         py311: {env:PYTHON:python3.11}
         py312: {env:PYTHON:python3.12}
@@ -171,11 +171,12 @@ legacy_tox_ini = """
     description = checks code quality
     deps =
         ruff
-        numpy
         setuptools-scm
-        setuptools
+        wheel
+        build
     skip_install = true
     commands =
         ruff check
         ruff format --diff
+        python -m build --wheel
 """
