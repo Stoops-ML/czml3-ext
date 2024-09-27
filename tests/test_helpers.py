@@ -5,6 +5,16 @@ from czml3_ext.errors import BillboardNotFound, BorderNotFound
 from czml3_ext.helpers import get_billboard, get_border
 
 
+def test_billboard_names():
+    for b in available_billboards:
+        assert b.lower() == b
+
+
+def test_border_names():
+    for b in available_borders:
+        assert b.lower() == b
+
+
 def test_billboard_not_found():
     with pytest.raises(BillboardNotFound):
         _ = get_billboard("F21")
