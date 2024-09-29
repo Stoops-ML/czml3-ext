@@ -9,7 +9,7 @@ from czml3_ext.packets import grid, sensor_polyline
 from . import saved_czmls
 
 
-@pytest.mark.skip(reason="Make a better test")
+@pytest.mark.xfail(reason="Make a better test")
 def test_1sensor():
     sensor1 = sensor_polyline(
         np.array([[[33.0], [33], [0]]]),
@@ -25,7 +25,7 @@ def test_1sensor():
     assert result == expected_str
 
 
-@pytest.mark.skip(reason="Make a better test")
+@pytest.mark.xfail(reason="Make a better test")
 def test_grid():
     x = np.linspace(33, 33.5, 10)
     y = np.linspace(33, 33.5, 10)
