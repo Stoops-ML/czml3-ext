@@ -1215,6 +1215,7 @@ def border(
     ],
     names: Optional[Union[str, Sequence[str]]] = None,
     rgba: Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]] = RGBA.white,
+    step: Union[int, Sequence[int]] = 1,
 ) -> list[Packet]:
     if isinstance(borders, str | np.ndarray):
         borders = [borders]
@@ -1234,6 +1235,8 @@ def border(
         rgba[0], int | float | np.integer | np.floating
     ):
         rgba = [rgba for _ in range(len(borders))]
+    if isinstance(step, int):
+        step = [step for _ in range(len(borders))]
 
     # checks
     if len(borders) != len(names) != len(rgba):
@@ -1257,7 +1260,7 @@ def border(
                 name=names[i_border],
                 polyline=Polyline(
                     positions=PositionList(
-                        cartographicDegrees=ddm_LLA_border[:, [1, 0, 2]]
+                        cartographicDegrees=ddm_LLA_border[:: step[i_border], [1, 0, 2]]
                         .ravel()
                         .tolist()
                     ),
