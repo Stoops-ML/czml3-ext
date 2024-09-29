@@ -520,7 +520,9 @@ def sensor_polyline(
                     rad_az1 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points[i_sensor] - 1)
+                        + rad_az_FOV[i_sensor]
+                        * (i_arc + 1)
+                        / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
@@ -1133,7 +1135,9 @@ def sensor_polygon(
                     rad_az1 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points[i_sensor] - 1)
+                        + rad_az_FOV[i_sensor]
+                        * (i_arc + 1)
+                        / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
