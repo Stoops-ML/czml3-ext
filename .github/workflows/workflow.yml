@@ -22,6 +22,11 @@ jobs:
       run: |
         ruff format
         ruff check --fix
+    - name: is_change
+      id: is_change
+      run: |
+        git status -s > out.txt
+        [ -s out.txt ]
     - name: Commit changes
       uses: EndBug/add-and-commit@v9
       with:
@@ -31,6 +36,8 @@ jobs:
         add: '*'
 
   tox-checks:
+    needs: lint
+    if: needs.lint.steps.is_change.conclusion == 1
     runs-on: ubuntu-latest
     strategy:
       matrix:
