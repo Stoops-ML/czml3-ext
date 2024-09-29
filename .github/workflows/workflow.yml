@@ -10,6 +10,7 @@ jobs:
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
+        token: ${{ secrets.PAT }}
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
@@ -23,6 +24,7 @@ jobs:
         ruff format
         ruff check --fix
     - name: Commit changes
+      id: commit_action
       uses: EndBug/add-and-commit@v9
       with:
         message: Lint files
@@ -31,6 +33,8 @@ jobs:
         add: '*'
 
   tox-checks:
+    needs: lint
+    if: needs.lint.steps.commit_action.outputs.pushed == 'false'
     runs-on: ubuntu-latest
     strategy:
       matrix:
