@@ -1217,6 +1217,35 @@ def border(
     rgba: Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]] = RGBA.white,
     step: Union[int, Sequence[int]] = 1,
 ) -> list[Packet]:
+    """Create a CZML3 packet of a border
+
+    Parameters
+    ----------
+    borders : Union[ str, npt.NDArray[np.floating[TNP]], Sequence[Union[str, npt.NDArray[np.floating[TNP]]]], ]
+        The border(s) packets requested
+    names : Optional[Union[str, Sequence[str]]], optional
+        Name for each border, by default None
+    rgba : Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]], optional
+        Colour of polyline, by default RGBA.white
+    step : Union[int, Sequence[int]], optional
+        Step of border points, by default 1
+
+    Returns
+    -------
+    list[Packet]
+        List of CZML3 packets.
+
+    Raises
+    ------
+    TypeError
+        _description_
+    TypeError
+        _description_
+    MismatchedInputsError
+        _description_
+    TypeError
+        _description_
+    """
     if isinstance(borders, str | np.ndarray):
         borders = [borders]
     if isinstance(borders, Sequence) and not all(
