@@ -40,8 +40,8 @@ jobs:
         add: '*'
 
   tox-checks:
-    needs: lint
-    if: needs.lint.steps.is_change.conclusion == 1
+    # needs: lint
+    # if: needs.lint.steps.is_change.conclusion == 1
     runs-on: ubuntu-latest
     strategy:
       matrix:
