@@ -573,6 +573,66 @@ def sensor_polygon(
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
     n_arc_points: int = 100,
 ) -> list[Packet]:
+    """Create a sensor using polygons.
+
+    Parameters
+    ----------
+    ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Location of sensor(s) in LLA [deg, deg, m] of shape (3, 1) for one sensor of (n, 3, 1) for n sensors
+    deg_az_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth of sensor(s) [deg]
+    deg_el_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation of sensor(s) [deg]
+    deg_az_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth FOV of sensor(s) [deg]
+    deg_el_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation FOV of sensor(s) [deg]
+    m_distance_max : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Maximum range of sensor(s) [m]
+    m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
+        Minimum range of sensor(s) [m], by default None
+    name : Optional[Union[str, Sequence[str]]], optional
+        Display name(s), by default None
+    description : Optional[Union[str, Sequence[str]]], optional
+        Display description(s), by default None
+    rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
+        Colour of polygons, by default None
+    n_arc_points : int, optional
+        Number of points to use to create the arc, by default 100
+
+    Returns
+    -------
+    list[Packet]
+        List of packets to create the sensor
+
+    Raises
+    ------
+    TypeError
+        _description_
+    ShapeError
+        _description_
+    ShapeError
+        _description_
+    NumDimensionsError
+        _description_
+    DataTypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    MismatchedInputsError
+        _description_
+    """
+
     # checks
     if isinstance(ddm_LLA, Sequence):
         ddm_LLA = np.array(ddm_LLA)
