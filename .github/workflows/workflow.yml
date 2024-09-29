@@ -26,7 +26,7 @@ jobs:
     - name: is_change
       id: is_change
       run: |
-        [ -n "$(git status -s)" ]
+        [ -z "$(git status -s)" ]
     - name: Commit changes
       uses: EndBug/add-and-commit@v9
       with:
@@ -37,7 +37,7 @@ jobs:
 
   tox-checks:
     needs: lint
-    if: needs.lint.steps.is_change.conclusion == 0
+    if: needs.lint.steps.is_change.conclusion == 1
     runs-on: ubuntu-latest
     strategy:
       matrix:
