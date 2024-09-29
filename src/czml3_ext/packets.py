@@ -89,7 +89,7 @@ def sensor_polyline(
     name: Optional[Union[str, Sequence[str]]] = None,
     description: Optional[Union[str, Sequence[str]]] = None,
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
-    n_arc_points: int = 100,
+    n_arc_points: Union[int, Sequence[int]] = 100,
 ) -> list[Packet]:
     # checks
     if isinstance(ddm_LLA, Sequence):
@@ -164,6 +164,8 @@ def sensor_polyline(
         rgba = [RGBA.blue for _ in range(ddm_LLA.shape[0])]
     elif isinstance(rgba[0], float):
         rgba = [rgba for _ in range(ddm_LLA.shape[0])]  # type: ignore  # TODO FIX
+    if not isinstance(n_arc_points, Sequence):
+        n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
     if not (
         ddm_LLA.shape[0]
         == deg_az_broadside.size
@@ -175,6 +177,7 @@ def sensor_polyline(
         == len(name)
         == len(description)
         == len(rgba)
+        == len(n_arc_points)
     ):
         raise MismatchedInputsError("All inputs must have same length")
 
@@ -448,16 +451,16 @@ def sensor_polyline(
             ):
                 rad_el %= np.pi
                 ddm_LLA_arc = []
-                for i_arc in range(n_arc_points - 1):
+                for i_arc in range(n_arc_points[i_sensor] - 1):
                     rad_az0 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     rad_az1 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
@@ -571,7 +574,7 @@ def sensor_polygon(
     name: Optional[Union[str, Sequence[str]]] = None,
     description: Optional[Union[str, Sequence[str]]] = None,
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
-    n_arc_points: int = 100,
+    n_arc_points: Union[int, Sequence[int]] = 100,
 ) -> list[Packet]:
     """Create a sensor using polygons.
 
@@ -708,6 +711,8 @@ def sensor_polygon(
         rgba = [c for _ in range(ddm_LLA.shape[0])]
     elif not isinstance(rgba[0], Sequence):
         rgba = [rgba for _ in range(ddm_LLA.shape[0])]  # type: ignore  # TODO FIX
+    if not isinstance(n_arc_points, Sequence):
+        n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
     if not (
         ddm_LLA.shape[0]
         == deg_az_broadside.size
@@ -719,6 +724,7 @@ def sensor_polygon(
         == len(name)
         == len(description)
         == len(rgba)
+        == len(n_arc_points)
     ):
         raise MismatchedInputsError("All inputs must have same length")
 
@@ -1053,21 +1059,21 @@ def sensor_polygon(
             ):
                 rad_el %= np.pi
                 r = (
-                    range(n_arc_points - 1)
+                    range(n_arc_points[i_sensor] - 1)
                     if i == 0
-                    else range(n_arc_points - 1, -2, -1)
+                    else range(n_arc_points[i_sensor] - 1, -2, -1)
                 )
                 ddm_LLA_arc_at_height = []
                 for i_arc in r:
                     rad_az0 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     rad_az1 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
