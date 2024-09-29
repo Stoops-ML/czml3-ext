@@ -25,12 +25,8 @@ jobs:
     - name: is_change
       id: is_change
       run: |
-        git status -s > out.txt
-        [ -s out.txt ]
-    - name: is_change
-      if: steps.is_change.conclusion == 0
-      run: |
-        rm out.txt
+        output=$(git status -s)
+        [ -z "$output" ]
     - name: Commit changes
       uses: EndBug/add-and-commit@v9
       with:
