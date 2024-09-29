@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from typing import Optional, Union
+from uuid import uuid4
 
 import numpy as np
 import numpy.typing as npt
@@ -27,19 +28,6 @@ from .definitions import TNP
 from .errors import DataTypeError, MismatchedInputsError, NumDimensionsError, ShapeError
 from .helpers import get_border
 from .shapely_helpers import linear_ring2LLA, poly2LLA
-
-_counter = 0
-
-
-def _create_unique_ID() -> str:
-    global _counter
-    _counter += 1
-    return str(_counter)
-
-
-def reset_unique_ID() -> None:
-    global _counter
-    _counter = 0
 
 
 def sensor_polyline(
@@ -310,7 +298,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line00-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line00-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -334,7 +322,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line01-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line01-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -358,7 +346,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line11-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line11-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -382,7 +370,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line10-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line10-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -406,7 +394,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line0010-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line0010-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -430,7 +418,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line0111-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line0111-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -507,7 +495,7 @@ def sensor_polyline(
                     )
                 out.append(
                     Packet(
-                        id=f"sensor{i_sensor}-{rad_el}-{m_distance}-{_create_unique_ID()}",
+                        id=f"sensor{i_sensor}-{rad_el}-{m_distance}-{str(uuid4())}",
                         name=name[i_sensor],
                         description=description[i_sensor],
                         polyline=Polyline(
@@ -847,7 +835,7 @@ def sensor_polygon(
 
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -876,7 +864,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -905,7 +893,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -934,7 +922,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -963,7 +951,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -1067,7 +1055,7 @@ def sensor_polygon(
                     )
                 out.append(
                     Packet(
-                        id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                        id=f"sensor{i_sensor}-{str(uuid4())}",
                         name=name[i_sensor],
                         description=description[i_sensor],
                         polygon=Polygon(
@@ -1085,7 +1073,7 @@ def sensor_polygon(
                 )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polygon=Polygon(
@@ -1189,7 +1177,7 @@ def grid(
         ]
         out.append(
             Packet(
-                id=f"grid{i_centre}-{_create_unique_ID()}",
+                id=f"grid{i_centre}-{str(uuid4())}",
                 name=f"Grid #{i_centre}",
                 polygon=Polygon(
                     positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
@@ -1285,7 +1273,7 @@ def border(
 
         out.append(
             Packet(
-                id=f"border-{names[i_border]}-{_create_unique_ID()}",
+                id=f"border-{names[i_border]}-{str(uuid4())}",
                 name=names[i_border],
                 polyline=Polyline(
                     positions=PositionList(
@@ -1355,7 +1343,7 @@ def coverage(
         ]
         out.append(
             Packet(
-                id=f"coverage-{_create_unique_ID()}",
+                id=f"coverage-{str(uuid4())}",
                 name=name,
                 polygon=Polygon(
                     positions=PositionList(
