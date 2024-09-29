@@ -27,6 +27,9 @@ jobs:
       run: |
         git status -s > out.txt
         [ -s out.txt ]
+    - name: remove out.txt
+      run: |
+        rm out.txt
     - name: Commit changes
       uses: EndBug/add-and-commit@v9
       with:
