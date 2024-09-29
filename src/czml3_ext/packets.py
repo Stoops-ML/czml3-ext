@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from typing import Optional, Union
+from uuid import uuid4
 
 import numpy as np
 import numpy.typing as npt
@@ -27,19 +28,6 @@ from .definitions import TNP
 from .errors import DataTypeError, MismatchedInputsError, NumDimensionsError, ShapeError
 from .helpers import get_border
 from .shapely_helpers import linear_ring2LLA, poly2LLA
-
-_counter = 0
-
-
-def _create_unique_ID() -> str:
-    global _counter
-    _counter += 1
-    return str(_counter)
-
-
-def reset_unique_ID() -> None:
-    global _counter
-    _counter = 0
 
 
 def sensor_polyline(
@@ -101,8 +89,68 @@ def sensor_polyline(
     name: Optional[Union[str, Sequence[str]]] = None,
     description: Optional[Union[str, Sequence[str]]] = None,
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
-    n_arc_points: int = 100,
+    n_arc_points: Union[int, Sequence[int]] = 100,
 ) -> list[Packet]:
+    """Create a sensor using polylines.
+
+    Parameters
+    ----------
+    ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Location of sensor(s) in LLA [deg, deg, m] of shape (3, 1) for one sensor of (n, 3, 1) for n sensors
+    deg_az_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth of sensor(s) [deg]
+    deg_el_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation of sensor(s) [deg]
+    deg_az_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth FOV of sensor(s) [deg]
+    deg_el_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation FOV of sensor(s) [deg]
+    m_distance_max : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Maximum range of sensor(s) [m]
+    m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
+        Minimum range of sensor(s) [m], by default None
+    name : Optional[Union[str, Sequence[str]]], optional
+        Display name(s), by default None
+    description : Optional[Union[str, Sequence[str]]], optional
+        Display description(s), by default None
+    rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
+        Colour of polylines, by default None
+    n_arc_points : int, optional
+        Number of points to use to create the arc, by default 100
+
+    Returns
+    -------
+    list[Packet]
+        List of packets to create the sensor
+
+    Raises
+    ------
+    TypeError
+        _description_
+    ShapeError
+        _description_
+    ShapeError
+        _description_
+    NumDimensionsError
+        _description_
+    DataTypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    MismatchedInputsError
+        _description_
+    """
+
     # checks
     if isinstance(ddm_LLA, Sequence):
         ddm_LLA = np.array(ddm_LLA)
@@ -176,6 +224,8 @@ def sensor_polyline(
         rgba = [RGBA.blue for _ in range(ddm_LLA.shape[0])]
     elif isinstance(rgba[0], float):
         rgba = [rgba for _ in range(ddm_LLA.shape[0])]  # type: ignore  # TODO FIX
+    if not isinstance(n_arc_points, Sequence):
+        n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
     if not (
         ddm_LLA.shape[0]
         == deg_az_broadside.size
@@ -187,6 +237,7 @@ def sensor_polyline(
         == len(name)
         == len(description)
         == len(rgba)
+        == len(n_arc_points)
     ):
         raise MismatchedInputsError("All inputs must have same length")
 
@@ -310,7 +361,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line00-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line00-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -334,7 +385,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line01-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line01-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -358,7 +409,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line11-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line11-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -382,7 +433,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line10-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line10-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -406,7 +457,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line0010-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line0010-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -430,7 +481,7 @@ def sensor_polyline(
             )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}line0111-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}line0111-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polyline=Polyline(
@@ -460,16 +511,18 @@ def sensor_polyline(
             ):
                 rad_el %= np.pi
                 ddm_LLA_arc = []
-                for i_arc in range(n_arc_points - 1):
+                for i_arc in range(n_arc_points[i_sensor] - 1):
                     rad_az0 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     rad_az1 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor]
+                        * (i_arc + 1)
+                        / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
@@ -507,7 +560,7 @@ def sensor_polyline(
                     )
                 out.append(
                     Packet(
-                        id=f"sensor{i_sensor}-{rad_el}-{m_distance}-{_create_unique_ID()}",
+                        id=f"sensor{i_sensor}-{rad_el}-{m_distance}-{str(uuid4())}",
                         name=name[i_sensor],
                         description=description[i_sensor],
                         polyline=Polyline(
@@ -583,8 +636,68 @@ def sensor_polygon(
     name: Optional[Union[str, Sequence[str]]] = None,
     description: Optional[Union[str, Sequence[str]]] = None,
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
-    n_arc_points: int = 100,
+    n_arc_points: Union[int, Sequence[int]] = 100,
 ) -> list[Packet]:
+    """Create a sensor using polygons.
+
+    Parameters
+    ----------
+    ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Location of sensor(s) in LLA [deg, deg, m] of shape (3, 1) for one sensor of (n, 3, 1) for n sensors
+    deg_az_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth of sensor(s) [deg]
+    deg_el_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation of sensor(s) [deg]
+    deg_az_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth FOV of sensor(s) [deg]
+    deg_el_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation FOV of sensor(s) [deg]
+    m_distance_max : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Maximum range of sensor(s) [m]
+    m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
+        Minimum range of sensor(s) [m], by default None
+    name : Optional[Union[str, Sequence[str]]], optional
+        Display name(s), by default None
+    description : Optional[Union[str, Sequence[str]]], optional
+        Display description(s), by default None
+    rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
+        Colour of polygons, by default None
+    n_arc_points : int, optional
+        Number of points to use to create the arc, by default 100
+
+    Returns
+    -------
+    list[Packet]
+        List of packets to create the sensor
+
+    Raises
+    ------
+    TypeError
+        _description_
+    ShapeError
+        _description_
+    ShapeError
+        _description_
+    NumDimensionsError
+        _description_
+    DataTypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    MismatchedInputsError
+        _description_
+    """
+
     # checks
     if isinstance(ddm_LLA, Sequence):
         ddm_LLA = np.array(ddm_LLA)
@@ -660,6 +773,8 @@ def sensor_polygon(
         rgba = [c for _ in range(ddm_LLA.shape[0])]
     elif not isinstance(rgba[0], Sequence):
         rgba = [rgba for _ in range(ddm_LLA.shape[0])]  # type: ignore  # TODO FIX
+    if not isinstance(n_arc_points, Sequence):
+        n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
     if not (
         ddm_LLA.shape[0]
         == deg_az_broadside.size
@@ -671,6 +786,7 @@ def sensor_polygon(
         == len(name)
         == len(description)
         == len(rgba)
+        == len(n_arc_points)
     ):
         raise MismatchedInputsError("All inputs must have same length")
 
@@ -847,7 +963,7 @@ def sensor_polygon(
 
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -876,7 +992,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -905,7 +1021,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -934,7 +1050,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -963,7 +1079,7 @@ def sensor_polygon(
         )
         out.append(
             Packet(
-                id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                id=f"sensor{i_sensor}-{str(uuid4())}",
                 name=name[i_sensor],
                 description=description[i_sensor],
                 polygon=Polygon(
@@ -1005,21 +1121,23 @@ def sensor_polygon(
             ):
                 rad_el %= np.pi
                 r = (
-                    range(n_arc_points - 1)
+                    range(n_arc_points[i_sensor] - 1)
                     if i == 0
-                    else range(n_arc_points - 1, -2, -1)
+                    else range(n_arc_points[i_sensor] - 1, -2, -1)
                 )
                 ddm_LLA_arc_at_height = []
                 for i_arc in r:
                     rad_az0 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     rad_az1 = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * (i_arc + 1) / (n_arc_points - 1)
+                        + rad_az_FOV[i_sensor]
+                        * (i_arc + 1)
+                        / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
@@ -1067,7 +1185,7 @@ def sensor_polygon(
                     )
                 out.append(
                     Packet(
-                        id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                        id=f"sensor{i_sensor}-{str(uuid4())}",
                         name=name[i_sensor],
                         description=description[i_sensor],
                         polygon=Polygon(
@@ -1085,7 +1203,7 @@ def sensor_polygon(
                 )
             out.append(
                 Packet(
-                    id=f"sensor{i_sensor}-{_create_unique_ID()}",
+                    id=f"sensor{i_sensor}-{str(uuid4())}",
                     name=name[i_sensor],
                     description=description[i_sensor],
                     polygon=Polygon(
@@ -1189,7 +1307,7 @@ def grid(
         ]
         out.append(
             Packet(
-                id=f"grid{i_centre}-{_create_unique_ID()}",
+                id=f"grid{i_centre}-{str(uuid4())}",
                 name=f"Grid #{i_centre}",
                 polygon=Polygon(
                     positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
@@ -1215,7 +1333,37 @@ def border(
     ],
     names: Optional[Union[str, Sequence[str]]] = None,
     rgba: Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]] = RGBA.white,
+    step: Union[int, Sequence[int]] = 1,
 ) -> list[Packet]:
+    """Create a CZML3 packet of a border
+
+    Parameters
+    ----------
+    borders : Union[ str, npt.NDArray[np.floating[TNP]], Sequence[Union[str, npt.NDArray[np.floating[TNP]]]], ]
+        The border(s) packets requested
+    names : Optional[Union[str, Sequence[str]]], optional
+        Name for each border, by default None
+    rgba : Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]], optional
+        Colour of polyline, by default RGBA.white
+    step : Union[int, Sequence[int]], optional
+        Step of border points, by default 1
+
+    Returns
+    -------
+    list[Packet]
+        List of CZML3 packets.
+
+    Raises
+    ------
+    TypeError
+        _description_
+    TypeError
+        _description_
+    MismatchedInputsError
+        _description_
+    TypeError
+        _description_
+    """
     if isinstance(borders, str | np.ndarray):
         borders = [borders]
     if isinstance(borders, Sequence) and not all(
@@ -1234,6 +1382,8 @@ def border(
         rgba[0], int | float | np.integer | np.floating
     ):
         rgba = [rgba for _ in range(len(borders))]
+    if isinstance(step, int):
+        step = [step for _ in range(len(borders))]
 
     # checks
     if len(borders) != len(names) != len(rgba):
@@ -1253,11 +1403,11 @@ def border(
 
         out.append(
             Packet(
-                id=f"border-{names[i_border]}-{_create_unique_ID()}",
+                id=f"border-{names[i_border]}-{str(uuid4())}",
                 name=names[i_border],
                 polyline=Polyline(
                     positions=PositionList(
-                        cartographicDegrees=ddm_LLA_border[:, [1, 0, 2]]
+                        cartographicDegrees=ddm_LLA_border[:: step[i_border], [1, 0, 2]]
                         .ravel()
                         .tolist()
                     ),
@@ -1323,7 +1473,7 @@ def coverage(
         ]
         out.append(
             Packet(
-                id=f"coverage-{_create_unique_ID()}",
+                id=f"coverage-{str(uuid4())}",
                 name=name,
                 polygon=Polygon(
                     positions=PositionList(

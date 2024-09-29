@@ -92,6 +92,10 @@ def get_contours(
     :param bool error_on_uncertainty: raise error if identification of polygon is below pc_poly_certainty_required threshold, defaults to True
     :raises ValueError: below pc_poly_certainty_required threshold, defaults to True
     """
+    # checks
+    if not np.issubdtype(arr.dtype, np.bool_):
+        raise TypeError("Array must be of type bool")
+
     # get contours
     contours = measure.find_contours(arr, find_contours_level)
     dd_LL_contours = [np.zeros(c.shape, dtype=c.dtype) for c in contours]

@@ -4,14 +4,13 @@ import numpy as np
 import pytest
 from czml3 import Document, Preamble
 
-from czml3_ext.packets import grid, reset_unique_ID, sensor_polyline
+from czml3_ext.packets import grid, sensor_polyline
 
 from . import saved_czmls
 
 
-@pytest.mark.skip(reason="Make a better test")
+@pytest.mark.xfail(reason="Make a better test")
 def test_1sensor():
-    reset_unique_ID()
     sensor1 = sensor_polyline(
         np.array([[[33.0], [33], [0]]]),
         10,
@@ -26,9 +25,8 @@ def test_1sensor():
     assert result == expected_str
 
 
-@pytest.mark.skip(reason="Make a better test")
+@pytest.mark.xfail(reason="Make a better test")
 def test_grid():
-    reset_unique_ID()
     x = np.linspace(33, 33.5, 10)
     y = np.linspace(33, 33.5, 10)
     xv, yv = np.meshgrid(x, y)
