@@ -463,20 +463,13 @@ def sensor_polyline(
             ):
                 rad_az %= 2 * np.pi
                 ddm_LLA_arc = []
-                for i_arc in range(n_arc_points[i_sensor] - 1):
+                for i_arc in range(n_arc_points[i_sensor]):
                     rad_el0 = (
                         rad_el_broadside[i_sensor]
                         - rad_el_FOV[i_sensor] / 2
                         + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
-                    rad_el1 = (
-                        rad_el_broadside[i_sensor]
-                        - rad_el_FOV[i_sensor] / 2
-                        + rad_el_FOV[i_sensor]
-                        * (i_arc + 1)
-                        / (n_arc_points[i_sensor] - 1)
-                    ) % (2 * np.pi)
-                    ddm_LLA_point0 = RRM2DDM(
+                    ddm_LLA_point = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
                                 rrm_LLA[i_sensor],
@@ -488,26 +481,11 @@ def sensor_polyline(
                             WGS84.b,
                         )
                     )
-                    ddm_LLA_point1 = RRM2DDM(
-                        ECEF2geodetic(
-                            ENU2ECEF(
-                                rrm_LLA[i_sensor],
-                                AER2ENU(np.array([[rad_az], [rad_el1], [m_distance]])),
-                                WGS84.a,
-                                WGS84.b,
-                            ),
-                            WGS84.a,
-                            WGS84.b,
-                        )
-                    )
                     ddm_LLA_arc.extend(
                         [
-                            ddm_LLA_point0[1, 0],
-                            ddm_LLA_point0[0, 0],
-                            ddm_LLA_point0[2, 0],
-                            ddm_LLA_point1[1, 0],
-                            ddm_LLA_point1[0, 0],
-                            ddm_LLA_point1[2, 0],
+                            ddm_LLA_point[1, 0],
+                            ddm_LLA_point[0, 0],
+                            ddm_LLA_point[2, 0],
                         ]
                     )
                 out.append(
@@ -533,36 +511,17 @@ def sensor_polyline(
             ):
                 rad_el %= np.pi
                 ddm_LLA_arc = []
-                for i_arc in range(n_arc_points[i_sensor] - 1):
-                    rad_az0 = (
+                for i_arc in range(n_arc_points[i_sensor]):
+                    rad_az = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
                         + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
                     ) % (2 * np.pi)
-                    rad_az1 = (
-                        rad_az_broadside[i_sensor]
-                        - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor]
-                        * (i_arc + 1)
-                        / (n_arc_points[i_sensor] - 1)
-                    ) % (2 * np.pi)
-                    ddm_LLA_point0 = RRM2DDM(
+                    ddm_LLA_point = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
                                 rrm_LLA[i_sensor],
-                                AER2ENU(np.array([[rad_az0], [rad_el], [m_distance]])),
-                                WGS84.a,
-                                WGS84.b,
-                            ),
-                            WGS84.a,
-                            WGS84.b,
-                        )
-                    )
-                    ddm_LLA_point1 = RRM2DDM(
-                        ECEF2geodetic(
-                            ENU2ECEF(
-                                rrm_LLA[i_sensor],
-                                AER2ENU(np.array([[rad_az1], [rad_el], [m_distance]])),
+                                AER2ENU(np.array([[rad_az], [rad_el], [m_distance]])),
                                 WGS84.a,
                                 WGS84.b,
                             ),
@@ -572,12 +531,9 @@ def sensor_polyline(
                     )
                     ddm_LLA_arc.extend(
                         [
-                            ddm_LLA_point0[1, 0],
-                            ddm_LLA_point0[0, 0],
-                            ddm_LLA_point0[2, 0],
-                            ddm_LLA_point1[1, 0],
-                            ddm_LLA_point1[0, 0],
-                            ddm_LLA_point1[2, 0],
+                            ddm_LLA_point[1, 0],
+                            ddm_LLA_point[0, 0],
+                            ddm_LLA_point[2, 0],
                         ]
                     )
                 out.append(
