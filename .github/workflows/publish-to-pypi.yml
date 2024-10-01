@@ -29,6 +29,8 @@ jobs:
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
+        name: czml3_ext-wheel
+        if-no-files-found: error
         path: dist/
 
   publish-to-pypi:
@@ -46,5 +48,6 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          name: czml3_ext-wheel
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
