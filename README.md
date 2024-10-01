@@ -32,12 +32,12 @@ The following code produces a CZML file with a single sensor:
 >> )
 >> 
 >> doc = Document([Preamble(name="simple")] + sensor_polygon + sensor_polyline)
->> with open("tmp.czml", "w") as f:
+>> with open("example.czml", "w") as f:
 >>     doc.dump(f)
 ```
 
 This produces the following view:
-![pic](https://github.com/user-attachments/assets/182c74a8-3f7e-4626-ab88-94d3d6a313cb)
+![Example](https://github.com/user-attachments/assets/8115fa44-c9b0-44a0-8107-6e33850c6e78)
 
 
 ## Contributing
