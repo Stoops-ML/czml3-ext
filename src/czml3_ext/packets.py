@@ -89,7 +89,7 @@ def sensor_polyline(
     name: Optional[Union[str, Sequence[str]]] = None,
     description: Optional[Union[str, Sequence[str]]] = None,
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
-    n_arc_points: Union[int, Sequence[int]] = 100,
+    n_arc_points: Union[int, Sequence[int]] = 10,
 ) -> list[Packet]:
     """Create a sensor using polylines.
 
@@ -116,7 +116,7 @@ def sensor_polyline(
     rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
         Colour of polylines, by default None
     n_arc_points : int, optional
-        Number of points to use to create the arc, by default 100
+        Number of points to use to create the arc, by default 10
 
     Returns
     -------
@@ -614,7 +614,7 @@ def sensor_polygon(
     name: Optional[Union[str, Sequence[str]]] = None,
     description: Optional[Union[str, Sequence[str]]] = None,
     rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
-    n_arc_points: Union[int, Sequence[int]] = 100,
+    n_arc_points: Union[int, Sequence[int]] = 10,
 ) -> list[Packet]:
     """Create a sensor using polygons.
 
@@ -641,7 +641,7 @@ def sensor_polygon(
     rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
         Colour of polygons, by default None
     n_arc_points : int, optional
-        Number of points to use to create the arc, by default 100
+        Number of points to use to create the arc, by default 10
 
     Returns
     -------
