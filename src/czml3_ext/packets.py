@@ -777,363 +777,37 @@ def sensor_polygon(
 
     out: list[Packet] = []
     for i_sensor in range(rrm_LLA.shape[0]):
-        ddm_LLA00_min = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] - rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2],
-                                [m_distance_min[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-        ddm_LLA01_min = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] + rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2],
-                                [m_distance_min[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-        ddm_LLA11_min = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] + rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2],
-                                [m_distance_min[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-        ddm_LLA10_min = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] - rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2],
-                                [m_distance_min[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-
-        ddm_LLA00_max = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] - rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2],
-                                [m_distance_max[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-        ddm_LLA01_max = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] + rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2],
-                                [m_distance_max[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-        ddm_LLA11_max = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] + rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2],
-                                [m_distance_max[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-        ddm_LLA10_max = RRM2DDM(
-            ECEF2geodetic(
-                ENU2ECEF(
-                    rrm_LLA[i_sensor],
-                    AER2ENU(
-                        np.array(
-                            [
-                                [rad_az_broadside[i_sensor] - rad_az_FOV[i_sensor] / 2],
-                                [rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2],
-                                [m_distance_max[i_sensor]],
-                            ]
-                        )
-                    ),
-                    WGS84.a,
-                    WGS84.b,
-                ),
-                WGS84.a,
-                WGS84.b,
-            )
-        )
-
-        out.append(
-            Packet(
-                id=f"sensor{i_sensor}-{str(uuid4())}",
-                name=name[i_sensor],
-                description=description[i_sensor],
-                polygon=Polygon(
-                    perPositionHeight=True,
-                    positions=PositionList(
-                        cartographicDegrees=[
-                            ddm_LLA00_min[1, 0],
-                            ddm_LLA00_min[0, 0],
-                            ddm_LLA00_min[2, 0],
-                            ddm_LLA00_max[1, 0],
-                            ddm_LLA00_max[0, 0],
-                            ddm_LLA00_max[2, 0],
-                            ddm_LLA10_max[1, 0],
-                            ddm_LLA10_max[0, 0],
-                            ddm_LLA10_max[2, 0],
-                            ddm_LLA10_min[1, 0],
-                            ddm_LLA10_min[0, 0],
-                            ddm_LLA10_min[2, 0],
-                        ]
-                    ),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba[i_sensor]))
-                    ),
-                ),
-            )
-        )
-        out.append(
-            Packet(
-                id=f"sensor{i_sensor}-{str(uuid4())}",
-                name=name[i_sensor],
-                description=description[i_sensor],
-                polygon=Polygon(
-                    perPositionHeight=True,
-                    positions=PositionList(
-                        cartographicDegrees=[
-                            ddm_LLA01_min[1, 0],
-                            ddm_LLA01_min[0, 0],
-                            ddm_LLA01_min[2, 0],
-                            ddm_LLA01_max[1, 0],
-                            ddm_LLA01_max[0, 0],
-                            ddm_LLA01_max[2, 0],
-                            ddm_LLA11_max[1, 0],
-                            ddm_LLA11_max[0, 0],
-                            ddm_LLA11_max[2, 0],
-                            ddm_LLA11_min[1, 0],
-                            ddm_LLA11_min[0, 0],
-                            ddm_LLA11_min[2, 0],
-                        ]
-                    ),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba[i_sensor]))
-                    ),
-                ),
-            )
-        )
-        out.append(
-            Packet(
-                id=f"sensor{i_sensor}-{str(uuid4())}",
-                name=name[i_sensor],
-                description=description[i_sensor],
-                polygon=Polygon(
-                    perPositionHeight=True,
-                    positions=PositionList(
-                        cartographicDegrees=[
-                            ddm_LLA01_max[1, 0],
-                            ddm_LLA01_max[0, 0],
-                            ddm_LLA01_max[2, 0],
-                            ddm_LLA11_max[1, 0],
-                            ddm_LLA11_max[0, 0],
-                            ddm_LLA11_max[2, 0],
-                            ddm_LLA10_max[1, 0],
-                            ddm_LLA10_max[0, 0],
-                            ddm_LLA10_max[2, 0],
-                            ddm_LLA00_max[1, 0],
-                            ddm_LLA00_max[0, 0],
-                            ddm_LLA00_max[2, 0],
-                        ]
-                    ),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba[i_sensor]))
-                    ),
-                ),
-            )
-        )
-        out.append(
-            Packet(
-                id=f"sensor{i_sensor}-{str(uuid4())}",
-                name=name[i_sensor],
-                description=description[i_sensor],
-                polygon=Polygon(
-                    perPositionHeight=True,
-                    positions=PositionList(
-                        cartographicDegrees=[
-                            ddm_LLA10_min[1, 0],
-                            ddm_LLA10_min[0, 0],
-                            ddm_LLA10_min[2, 0],
-                            ddm_LLA10_max[1, 0],
-                            ddm_LLA10_max[0, 0],
-                            ddm_LLA10_max[2, 0],
-                            ddm_LLA11_max[1, 0],
-                            ddm_LLA11_max[0, 0],
-                            ddm_LLA11_max[2, 0],
-                            ddm_LLA11_min[1, 0],
-                            ddm_LLA11_min[0, 0],
-                            ddm_LLA11_min[2, 0],
-                        ]
-                    ),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba[i_sensor]))
-                    ),
-                ),
-            )
-        )
-        out.append(
-            Packet(
-                id=f"sensor{i_sensor}-{str(uuid4())}",
-                name=name[i_sensor],
-                description=description[i_sensor],
-                polygon=Polygon(
-                    perPositionHeight=True,
-                    positions=PositionList(
-                        cartographicDegrees=[
-                            ddm_LLA00_min[1, 0],
-                            ddm_LLA00_min[0, 0],
-                            ddm_LLA00_min[2, 0],
-                            ddm_LLA00_max[1, 0],
-                            ddm_LLA00_max[0, 0],
-                            ddm_LLA00_max[2, 0],
-                            ddm_LLA01_max[1, 0],
-                            ddm_LLA01_max[0, 0],
-                            ddm_LLA01_max[2, 0],
-                            ddm_LLA01_min[1, 0],
-                            ddm_LLA01_min[0, 0],
-                            ddm_LLA01_min[2, 0],
-                        ]
-                    ),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba[i_sensor]))
-                    ),
-                ),
-            )
-        )
-
-        for m_distance in (m_distance_min[i_sensor], m_distance_max[i_sensor]):
-            if m_distance == 0:
-                continue
-
-            # arcs
+        # elevation arcs at min/max azimuths
+        for rad_az in (
+            rad_az_broadside[i_sensor] - rad_az_FOV[i_sensor] / 2,
+            rad_az_broadside[i_sensor] + rad_az_FOV[i_sensor] / 2,
+        ):
             ddm_LLA_arc = []
-            for i, rad_el in enumerate(
-                (
-                    rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2,
-                    rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2,
-                )
+            for i_m, m_distance in enumerate(
+                (m_distance_min[i_sensor], m_distance_max[i_sensor])
             ):
-                rad_el %= np.pi
-                r = (
-                    range(n_arc_points[i_sensor] - 1)
-                    if i == 0
-                    else range(n_arc_points[i_sensor] - 1, -2, -1)
-                )
-                ddm_LLA_arc_at_height = []
-                for i_arc in r:
-                    rad_az0 = (
-                        rad_az_broadside[i_sensor]
-                        - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
-                    ) % (2 * np.pi)
-                    rad_az1 = (
-                        rad_az_broadside[i_sensor]
-                        - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor]
-                        * (i_arc + 1)
-                        / (n_arc_points[i_sensor] - 1)
-                    ) % (2 * np.pi)
+                for i_arc0 in range(n_arc_points[i_sensor]):
+                    if i_m == 0:
+                        rad_el = (
+                            rad_el_broadside[i_sensor]
+                            - rad_el_FOV[i_sensor] / 2
+                            + rad_el_FOV[i_sensor]
+                            * i_arc0
+                            / (n_arc_points[i_sensor] - 1)
+                        ) % np.pi
+                    else:
+                        rad_el = (
+                            rad_el_broadside[i_sensor]
+                            + rad_el_FOV[i_sensor] / 2
+                            - rad_el_FOV[i_sensor]
+                            * i_arc0
+                            / (n_arc_points[i_sensor] - 1)
+                        ) % np.pi
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
                                 rrm_LLA[i_sensor],
-                                AER2ENU(np.array([[rad_az0], [rad_el], [m_distance]])),
-                                WGS84.a,
-                                WGS84.b,
-                            ),
-                            WGS84.a,
-                            WGS84.b,
-                        )
-                    )
-                    ddm_LLA_point1 = RRM2DDM(
-                        ECEF2geodetic(
-                            ENU2ECEF(
-                                rrm_LLA[i_sensor],
-                                AER2ENU(np.array([[rad_az1], [rad_el], [m_distance]])),
+                                AER2ENU(np.array([[rad_az], [rad_el], [m_distance]])),
                                 WGS84.a,
                                 WGS84.b,
                             ),
@@ -1146,39 +820,8 @@ def sensor_polygon(
                             ddm_LLA_point0[1, 0],
                             ddm_LLA_point0[0, 0],
                             ddm_LLA_point0[2, 0],
-                            ddm_LLA_point1[1, 0],
-                            ddm_LLA_point1[0, 0],
-                            ddm_LLA_point1[2, 0],
                         ]
                     )
-                    ddm_LLA_arc_at_height.extend(
-                        [
-                            ddm_LLA_point0[1, 0],
-                            ddm_LLA_point0[0, 0],
-                            ddm_LLA_point0[2, 0],
-                            ddm_LLA_point1[1, 0],
-                            ddm_LLA_point1[0, 0],
-                            ddm_LLA_point1[2, 0],
-                        ]
-                    )
-                out.append(
-                    Packet(
-                        id=f"sensor{i_sensor}-{str(uuid4())}",
-                        name=name[i_sensor],
-                        description=description[i_sensor],
-                        polygon=Polygon(
-                            perPositionHeight=True,
-                            positions=PositionList(
-                                cartographicDegrees=ddm_LLA_arc_at_height
-                            ),
-                            material=Material(
-                                solidColor=SolidColorMaterial(
-                                    color=Color(rgba=rgba[i_sensor])
-                                )
-                            ),
-                        ),
-                    )
-                )
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}-{str(uuid4())}",
@@ -1195,6 +838,135 @@ def sensor_polygon(
                     ),
                 )
             )
+
+        # azimuth arcs at min/max elevations
+        for rad_el in (
+            rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2,
+            rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2,
+        ):
+            ddm_LLA_arc = []
+            for i_m, m_distance in enumerate(
+                (m_distance_min[i_sensor], m_distance_max[i_sensor])
+            ):
+                for i_arc0 in range(n_arc_points[i_sensor]):
+                    if i_m == 0:
+                        rad_az = (
+                            rad_az_broadside[i_sensor]
+                            - rad_az_FOV[i_sensor] / 2
+                            + rad_az_FOV[i_sensor]
+                            * i_arc0
+                            / (n_arc_points[i_sensor] - 1)
+                        ) % np.pi
+                    else:
+                        rad_az = (
+                            rad_az_broadside[i_sensor]
+                            + rad_az_FOV[i_sensor] / 2
+                            - rad_az_FOV[i_sensor]
+                            * i_arc0
+                            / (n_arc_points[i_sensor] - 1)
+                        ) % np.pi
+                    ddm_LLA_point0 = RRM2DDM(
+                        ECEF2geodetic(
+                            ENU2ECEF(
+                                rrm_LLA[i_sensor],
+                                AER2ENU(np.array([[rad_az], [rad_el], [m_distance]])),
+                                WGS84.a,
+                                WGS84.b,
+                            ),
+                            WGS84.a,
+                            WGS84.b,
+                        )
+                    )
+                    ddm_LLA_arc.extend(
+                        [
+                            ddm_LLA_point0[1, 0],
+                            ddm_LLA_point0[0, 0],
+                            ddm_LLA_point0[2, 0],
+                        ]
+                    )
+            out.append(
+                Packet(
+                    id=f"sensor{i_sensor}-{str(uuid4())}",
+                    name=name[i_sensor],
+                    description=description[i_sensor],
+                    polygon=Polygon(
+                        perPositionHeight=True,
+                        positions=PositionList(cartographicDegrees=ddm_LLA_arc),
+                        material=Material(
+                            solidColor=SolidColorMaterial(
+                                color=Color(rgba=rgba[i_sensor])
+                            )
+                        ),
+                    ),
+                )
+            )
+
+        for m_distance in (m_distance_min[i_sensor], m_distance_max[i_sensor]):
+            if m_distance == 0:
+                continue
+
+            # azimuth arcs along every elevation
+            ddm_LLA_arc = []
+            for i_arc0 in range(n_arc_points[i_sensor]):
+                rad_el = (
+                    rad_el_broadside[i_sensor]
+                    - rad_el_FOV[i_sensor] / 2
+                    + rad_el_FOV[i_sensor] * i_arc0 / (n_arc_points[i_sensor] - 1)
+                ) % np.pi
+                for i_arc1 in range(n_arc_points[i_sensor]):
+                    if i_arc0 % 2 == 0:
+                        rad_az = (
+                            rad_az_broadside[i_sensor]
+                            - rad_az_FOV[i_sensor] / 2
+                            + rad_az_FOV[i_sensor]
+                            * i_arc1
+                            / (n_arc_points[i_sensor] - 1)
+                        ) % (2 * np.pi)
+                    else:
+                        rad_az = (
+                            rad_az_broadside[i_sensor]
+                            + rad_az_FOV[i_sensor] / 2
+                            - rad_az_FOV[i_sensor]
+                            * i_arc1
+                            / (n_arc_points[i_sensor] - 1)
+                        ) % (2 * np.pi)
+                    ddm_LLA_point0 = RRM2DDM(
+                        ECEF2geodetic(
+                            ENU2ECEF(
+                                rrm_LLA[i_sensor],
+                                AER2ENU(np.array([[rad_az], [rad_el], [m_distance]])),
+                                WGS84.a,
+                                WGS84.b,
+                            ),
+                            WGS84.a,
+                            WGS84.b,
+                        )
+                    )
+                    ddm_LLA_arc.extend(
+                        [
+                            ddm_LLA_point0[1, 0],
+                            ddm_LLA_point0[0, 0],
+                            ddm_LLA_point0[2, 0],
+                        ]
+                    )
+                if i_arc0 > 0:
+                    out.append(
+                        Packet(
+                            id=f"sensor{i_sensor}-{str(uuid4())}",
+                            name=name[i_sensor],
+                            description=description[i_sensor],
+                            polygon=Polygon(
+                                perPositionHeight=True,
+                                positions=PositionList(cartographicDegrees=ddm_LLA_arc),
+                                material=Material(
+                                    solidColor=SolidColorMaterial(
+                                        color=Color(rgba=rgba[i_sensor])
+                                    )
+                                ),
+                            ),
+                        )
+                    )
+                    ddm_LLA_arc = ddm_LLA_arc[n_arc_points[i_sensor] * 3 :]
 
     return out
 
