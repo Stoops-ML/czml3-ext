@@ -109,7 +109,11 @@ extend-include = ["*.ipynb"]
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-ignore = ["UP007", "E501"]
+ignore = [
+    "UP007",
+    "E501",
+    "F821"  # to support Python 3.9
+]
 select = ["E", "F", "UP", "B", "SIM", "I"]
 
 

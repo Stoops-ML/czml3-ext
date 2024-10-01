@@ -17,7 +17,7 @@ from .definitions import TNP
 from .errors import BillboardNotFound, BorderNotFound
 
 
-def get_billboard(file_name: str | Path) -> str:
+def get_billboard(file_name: Union[str, Path]) -> str:
     """
     :param file_name: name of billboard to retrieve
     :return: string of base64 encoded png billboard
@@ -36,7 +36,7 @@ def get_billboard(file_name: str | Path) -> str:
         ) from None
 
 
-def get_border(file_name: str | Path) -> npt.NDArray[np.float64]:
+def get_border(file_name: Union[str, Path]) -> npt.NDArray[np.float64]:
     """
     :param file_name: name of border file
     :return: string of czml file
@@ -58,7 +58,7 @@ def get_border(file_name: str | Path) -> npt.NDArray[np.float64]:
         ) from None
 
 
-def png2base64(file_path: str | Path) -> str:
+def png2base64(file_path: Union[str, Path]) -> str:
     """
     Convert png image to billboard string for czml
     :param file_path:
