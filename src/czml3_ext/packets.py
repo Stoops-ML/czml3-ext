@@ -1114,10 +1114,10 @@ def border(
     TypeError
         _description_
     """
-    if isinstance(borders, str | np.ndarray):
+    if isinstance(borders, (str, np.ndarray)):
         borders = [borders]
     if isinstance(borders, Sequence) and not all(
-        [isinstance(border, str | np.ndarray) for border in borders]
+        [isinstance(border, (str, np.ndarray)) for border in borders]
     ):
         raise TypeError("Borders must be a sequence of str or numpy arrays")
     if names is None:
@@ -1129,7 +1129,7 @@ def border(
     ):
         raise TypeError("Names must be a sequence of strings")
     if isinstance(rgba, list) and isinstance(
-        rgba[0], int | float | np.integer | np.floating
+        rgba[0], (int, float, np.integer, np.floating)
     ):
         rgba = [rgba for _ in range(len(borders))]
     if isinstance(step, int):

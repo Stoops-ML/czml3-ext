@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Create packets of CZML3"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 classifiers = [
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
@@ -18,7 +18,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -110,7 +109,11 @@ extend-include = ["*.ipynb"]
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-ignore = ["UP007", "E501"]
+ignore = [
+    "UP007",
+    "E501",
+    "F821"  # to support Python 3.9
+]
 select = ["E", "F", "UP", "B", "SIM", "I"]
 
 
@@ -150,7 +153,6 @@ legacy_tox_ini = """
 
     [gh-actions]
     python =
-        3.8: py38
         3.9: py39
         3.10: py310
         3.11: py311, quality
@@ -158,7 +160,6 @@ legacy_tox_ini = """
 
     [testenv]
     basepython =
-        py38: {env:PYTHON:python3.8}
         py39: {env:PYTHON:python3.9}
         py310: {env:PYTHON:python3.10}
         py311: {env:PYTHON:python3.11}
