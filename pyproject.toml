@@ -150,12 +150,16 @@ legacy_tox_ini = """
 
     [gh-actions]
     python =
+        3.8: py38
+        3.9: py39
         3.10: py310
         3.11: py311, quality
         3.12: py312
 
     [testenv]
     basepython =
+        py38: {env:PYTHON:python3.8}
+        py39: {env:PYTHON:python3.9}
         py310: {env:PYTHON:python3.10}
         py311: {env:PYTHON:python3.11}
         py312: {env:PYTHON:python3.12}
