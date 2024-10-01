@@ -455,56 +455,78 @@ def sensor_polyline(
                     ),
                 )
             )
-            out.append(
-                Packet(
-                    id=f"sensor{i_sensor}line0010-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
-                    polyline=Polyline(
-                        positions=PositionList(
-                            cartographicDegrees=[
-                                ddm_LLA00[1, 0],
-                                ddm_LLA00[0, 0],
-                                ddm_LLA00[2, 0],
-                                ddm_LLA10[1, 0],
-                                ddm_LLA10[0, 0],
-                                ddm_LLA10[2, 0],
-                            ]
-                        ),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
-                    ),
-                )
-            )
-            out.append(
-                Packet(
-                    id=f"sensor{i_sensor}line0111-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
-                    polyline=Polyline(
-                        positions=PositionList(
-                            cartographicDegrees=[
-                                ddm_LLA01[1, 0],
-                                ddm_LLA01[0, 0],
-                                ddm_LLA01[2, 0],
-                                ddm_LLA11[1, 0],
-                                ddm_LLA11[0, 0],
-                                ddm_LLA11[2, 0],
-                            ]
-                        ),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
-                    ),
-                )
-            )
 
-            # arcs
+            # elevation arcs at min/max azimuths
+            for rad_az in (
+                rad_az_broadside[i_sensor] - rad_az_FOV[i_sensor] / 2,
+                rad_az_broadside[i_sensor] + rad_az_FOV[i_sensor] / 2,
+            ):
+                rad_az %= 2 * np.pi
+                ddm_LLA_arc = []
+                for i_arc in range(n_arc_points[i_sensor] - 1):
+                    rad_el0 = (
+                        rad_el_broadside[i_sensor]
+                        - rad_el_FOV[i_sensor] / 2
+                        + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
+                    ) % (2 * np.pi)
+                    rad_el1 = (
+                        rad_el_broadside[i_sensor]
+                        - rad_el_FOV[i_sensor] / 2
+                        + rad_el_FOV[i_sensor]
+                        * (i_arc + 1)
+                        / (n_arc_points[i_sensor] - 1)
+                    ) % (2 * np.pi)
+                    ddm_LLA_point0 = RRM2DDM(
+                        ECEF2geodetic(
+                            ENU2ECEF(
+                                rrm_LLA[i_sensor],
+                                AER2ENU(np.array([[rad_az], [rad_el0], [m_distance]])),
+                                WGS84.a,
+                                WGS84.b,
+                            ),
+                            WGS84.a,
+                            WGS84.b,
+                        )
+                    )
+                    ddm_LLA_point1 = RRM2DDM(
+                        ECEF2geodetic(
+                            ENU2ECEF(
+                                rrm_LLA[i_sensor],
+                                AER2ENU(np.array([[rad_az], [rad_el1], [m_distance]])),
+                                WGS84.a,
+                                WGS84.b,
+                            ),
+                            WGS84.a,
+                            WGS84.b,
+                        )
+                    )
+                    ddm_LLA_arc.extend(
+                        [
+                            ddm_LLA_point0[1, 0],
+                            ddm_LLA_point0[0, 0],
+                            ddm_LLA_point0[2, 0],
+                            ddm_LLA_point1[1, 0],
+                            ddm_LLA_point1[0, 0],
+                            ddm_LLA_point1[2, 0],
+                        ]
+                    )
+                out.append(
+                    Packet(
+                        id=str(uuid4()),
+                        name=name[i_sensor],
+                        description=description[i_sensor],
+                        polyline=Polyline(
+                            positions=PositionList(cartographicDegrees=ddm_LLA_arc),
+                            material=Material(
+                                solidColor=SolidColorMaterial(
+                                    color=Color(rgba=rgba[i_sensor])
+                                )
+                            ),
+                        ),
+                    )
+                )
+
+            # azimuth arcs at min/max elevations
             for rad_el in (
                 rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2,
                 rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2,
