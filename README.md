@@ -37,7 +37,8 @@ The following code produces a CZML file with a single sensor:
 ```
 
 This produces the following view:
-![example](pic.png "Example")
+![pic](https://github.com/user-attachments/assets/182c74a8-3f7e-4626-ab88-94d3d6a313cb)
+
 
 ## Contributing
 PRs are always welcome and appreciated!
