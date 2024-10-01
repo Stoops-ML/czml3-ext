@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Create packets of CZML3"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 classifiers = [
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
