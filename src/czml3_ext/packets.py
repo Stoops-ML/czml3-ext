@@ -140,9 +140,7 @@ def sensor_polyline(
 
     # checks
     if isinstance(ddm_LLA, Sequence):
-        ddm_LLA = np.array(ddm_LLA)
-    elif not isinstance(ddm_LLA, np.ndarray):
-        raise TypeError("ddm_LLA must be a numpy array or sequence")
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim == 2 and ddm_LLA.shape != (3, 1):
         raise ShapeError("A single point must be of shape (3, 1)")
     elif ddm_LLA.ndim == 3 and ddm_LLA.shape[1:] != (3, 1):
@@ -633,9 +631,7 @@ def sensor_polygon(
 
     # checks
     if isinstance(ddm_LLA, Sequence):
-        ddm_LLA = np.array(ddm_LLA)
-    elif not isinstance(ddm_LLA, np.ndarray):
-        raise TypeError("ddm_LLA must be a numpy array or sequence")
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim == 2 and ddm_LLA.shape != (3, 1):
         raise ShapeError("A single point must be of shape (3, 1)")
     elif ddm_LLA.ndim == 3 and ddm_LLA.shape[1:] != (3, 1):
@@ -952,9 +948,7 @@ def grid(
     """
     # checks
     if isinstance(ddm_LLA, Sequence):
-        ddm_LLA = np.array(ddm_LLA)
-    elif not isinstance(ddm_LLA, np.ndarray):
-        raise TypeError("ddm_LLA must be a sequence of numpy array.")
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim != 3:
         raise NumDimensionsError(
             "Point(s) must either have three dimensions with shape (n, 3, 1)"
