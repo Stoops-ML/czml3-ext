@@ -88,6 +88,12 @@ def sensor_polyline(
 ) -> list[Packet]:
     """Create a sensor using polylines.
 
+    All packets in the output may be updated using kwargs.
+    If the value of the kwarg is a sequence with the length of the number of sensors then each value will be assigned to the CZML3 packet of it's corresponding sensor.
+    If the value of the kwarg is not a sequence with the length of the number of sensors then the value will be assigned to the CZML3 packets of all sensors.
+    Note that the following czml3.properties.Polyline properties are ignored:
+        - positions
+
     Parameters
     ----------
     ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
@@ -105,12 +111,12 @@ def sensor_polyline(
     m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
         Minimum range of sensor(s) [m], by default None
     n_arc_points : Union[int, Sequence[int]], optional
-        Number of points to use to create the arc, by default 10
+        Number of points to use to create the arcs, by default 10
 
     Returns
     -------
     list[Packet]
-        List of packets to create the sensor
+        List of CZML3 packets.
 
     Raises
     ------
@@ -577,6 +583,13 @@ def sensor_polygon(
 ) -> list[Packet]:
     """Create a sensor using polygons.
 
+    All packets in the output may be updated using kwargs.
+    If the value of the kwarg is a sequence with the length of the number of sensors then each value will be assigned to the CZML3 packet of it's corresponding sensor.
+    If the value of the kwarg is not a sequence with the length of the number of sensors then the value will be assigned to the CZML3 packets of all sensors.
+    Note that the following czml3.properties.Polygon properties are ignored:
+        - positions
+        - perPositionHeight
+
     Parameters
     ----------
     ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
@@ -594,12 +607,12 @@ def sensor_polygon(
     m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
         Minimum range of sensor(s) [m], by default None
     n_arc_points : int, optional
-        Number of points to use to create the arc, by default 10
+        Number of points to use to create the arcs, by default 10
 
     Returns
     -------
     list[Packet]
-        List of packets to create the sensor
+        List of CZML3 packets.
 
     Raises
     ------
@@ -927,6 +940,14 @@ def grid(
     To support non-contiguous grids it is assumed that the resolution of the grid (in longitude and latitude) is the
     smallest difference between points.
 
+    All packets in the output may be updated using kwargs.
+    If the value of the kwarg is a sequence with the length of the number of grid points then each value will be assigned to the CZML3 packet of it's corresponding grid point.
+    If the value of the kwarg is not a sequence with the length of the number of grid points then the value will be assigned to the CZML3 packets of all grid points.
+    Note that the following czml3.properties.Polygon properties are ignored:
+        - positions
+        - outline
+        - outlineColor
+
     Parameters
     ----------
     ddm_LLA : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
@@ -935,7 +956,7 @@ def grid(
     Returns
     -------
     list[Packet]
-        List of packets to create the grid
+        List of CZML3 packets.
 
     Raises
     ------
@@ -1031,7 +1052,13 @@ def border(
     step: Union[int, Sequence[int]] = 1,
     **update_packets,
 ) -> list[Packet]:
-    """Create a CZML3 packet of a border
+    """Create a CZML3 packet of a border.
+
+    All packets in the output may be updated using kwargs.
+    If the value of the kwarg is a sequence with the length of the number of borders then each value will be assigned to the CZML3 packet of it's corresponding border.
+    If the value of the kwarg is not a sequence with the length of the number of borders then the value will be assigned to the CZML3 packets of all borders.
+    Note that the following czml3.properties.Polyline properties are ignored:
+        - positions
 
     Parameters
     ----------
@@ -1043,7 +1070,7 @@ def border(
     Returns
     -------
     list[Packet]
-        List of CZML3 packets
+        List of CZML3 packets.
 
     Raises
     ------
@@ -1116,6 +1143,14 @@ def coverage(
 ) -> list[Packet]:
     """Create czml3 packets of coverage (including holes).
 
+    All packets in the output may be updated using kwargs.
+    Each value of the kwarg will be assigned to all CZML3 packets.
+    Note that the following czml3.properties.Polygon properties are ignored:
+        - positions
+        - holes
+        - outlineColor
+        - outline
+
     Parameters
     ----------
     dd_LL_coverages : Union[ Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]] ]
@@ -1126,7 +1161,7 @@ def coverage(
     Returns
     -------
     list[Packet]
-        List of CZML3 packets
+        List of CZML3 packets.
     """
     if not isinstance(dd_LL_coverages, Sequence):
         dd_LL_coverages = [dd_LL_coverages]
