@@ -84,7 +84,7 @@ def sensor_polyline(
     ] = None,
     *,
     n_arc_points: Union[int, Sequence[int]] = 10,
-    **add_params: dict[str, Any],
+    **update_packets: dict[str, Any],
 ) -> list[Packet]:
     """Create a sensor using polylines.
 
@@ -216,7 +216,7 @@ def sensor_polyline(
     add_params_per_sensor_polyline: list[dict[str, Any]] = [
         {} for _ in range(ddm_LLA.shape[0])
     ]
-    for k, v in add_params.items():
+    for k, v in update_packets.items():
         if isinstance(v, Polyline):
             v.__dict__.pop("positions", None)
             for i_sensor in range(ddm_LLA.shape[0]):
@@ -573,7 +573,7 @@ def sensor_polygon(
     ] = None,
     *,
     n_arc_points: Union[int, Sequence[int]] = 10,
-    **add_params: dict[str, Any],
+    **update_packets: dict[str, Any],
 ) -> list[Packet]:
     """Create a sensor using polygons.
 
@@ -714,7 +714,7 @@ def sensor_polygon(
     add_params_per_sensor_polygon: list[dict[str, Any]] = [
         {} for _ in range(ddm_LLA.shape[0])
     ]
-    for k, v in add_params.items():
+    for k, v in update_packets.items():
         if isinstance(v, Polygon):
             v.__dict__.pop("positions", None)
             v.__dict__.pop("perPositionHeight", None)
@@ -918,7 +918,7 @@ def grid(
         npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
         Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
     ],
-    **add_params: dict[str, Any],
+    **update_packets: dict[str, Any],
 ) -> list[Packet]:
     """Make a grid in CZML.
 
@@ -969,7 +969,7 @@ def grid(
     add_params_per_square_polygon: list[dict[str, Any]] = [
         {} for _ in range(ddm_LLA.shape[0])
     ]
-    for k, v in add_params.items():
+    for k, v in update_packets.items():
         if isinstance(v, Polygon):
             v.__dict__.pop("positions", None)
             v.__dict__.pop("outline", None)
@@ -1029,7 +1029,7 @@ def border(
         Sequence[Union[str, npt.NDArray[np.floating[TNP]]]],
     ],
     step: Union[int, Sequence[int]] = 1,
-    **add_params: dict[str, Any],
+    **update_packets: dict[str, Any],
 ) -> list[Packet]:
     """Create a CZML3 packet of a border
 
@@ -1060,7 +1060,7 @@ def border(
     add_params_per_border_polyline: list[dict[str, Any]] = [
         {} for _ in range(len(borders))
     ]
-    for k, v in add_params.items():
+    for k, v in update_packets.items():
         if isinstance(v, Polyline):
             v.__dict__.pop("positions", None)
             for i_sensor in range(len(borders)):
@@ -1112,7 +1112,7 @@ def coverage(
     dd_LL_holes: Optional[
         Union[Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]]
     ] = None,
-    **add_params: dict[str, Any],
+    **update_packets: dict[str, Any],
 ) -> list[Packet]:
     """Create czml3 packets of coverage (including holes).
 
@@ -1152,7 +1152,7 @@ def coverage(
     # modify additional inputs
     add_params1: dict[str, Any] = {}
     add_params_polygon: dict[str, Any] = {}
-    for k, v in add_params.items():
+    for k, v in update_packets.items():
         if isinstance(v, Polygon):
             v.__dict__.pop("positions", None)
             v.__dict__.pop("holes", None)
