@@ -935,7 +935,7 @@ def grid(
     Returns
     -------
     list[Packet]
-        rgba of all grid points
+        List of packets to create the grid
 
     Raises
     ------
