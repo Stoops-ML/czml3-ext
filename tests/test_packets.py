@@ -3,6 +3,7 @@ from importlib import resources as impresources
 import numpy as np
 import pytest
 from czml3 import Document, Preamble
+from czml3.properties import Color, Material, Polygon, SolidColorMaterial
 
 from czml3_ext.packets import grid, sensor_polyline
 
@@ -35,8 +36,7 @@ def test_grid():
         for j in range(y.shape[0] - 1):
             ddm_points.append([yv[j, i], xv[j, i], 0])
     ddm_LLA_points = np.array(ddm_points).reshape((-1, 3, 1))
-    grid1 = grid(
-        ddm_LLA_points,
+    colours = (
         np.vstack(
             (
                 np.linspace(0, 255, ddm_LLA_points.shape[0]),
@@ -46,7 +46,17 @@ def test_grid():
             )
         )
         .T.reshape((-1, 4))
-        .tolist(),
+        .tolist()
+    )
+    grid1 = grid(
+        ddm_LLA_points,
+        polygon=[
+            Polygon(
+                positions=[],
+                material=Material(solidColor=SolidColorMaterial(color=Color(rgba=c))),
+            )
+            for c in colours
+        ],
     )
     result = Document([Preamble(name="simple")] + grid1).dumps()
     with (impresources.files(saved_czmls) / "grid_DDM.czml").open("r") as f:

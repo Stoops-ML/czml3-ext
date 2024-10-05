@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from uuid import uuid4
 
 import numpy as np
@@ -8,12 +8,10 @@ import shapely
 from czml3 import Packet
 from czml3.properties import (
     Color,
-    Material,
     Polygon,
     Polyline,
     PositionList,
     PositionListOfLists,
-    SolidColorMaterial,
 )
 from transforms84.helpers import DDM2RRM, RRM2DDM
 from transforms84.systems import WGS84
@@ -23,7 +21,6 @@ from transforms84.transforms import (
     ECEF2geodetic,
 )
 
-from .colours import COLOUR_TYPE, RGBA
 from .definitions import TNP
 from .errors import DataTypeError, MismatchedInputsError, NumDimensionsError, ShapeError
 from .helpers import get_border
@@ -86,10 +83,8 @@ def sensor_polyline(
         ]
     ] = None,
     *,
-    name: Optional[Union[str, Sequence[str]]] = None,
-    description: Optional[Union[str, Sequence[str]]] = None,
-    rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
     n_arc_points: Union[int, Sequence[int]] = 10,
+    **update_packets,
 ) -> list[Packet]:
     """Create a sensor using polylines.
 
@@ -109,13 +104,7 @@ def sensor_polyline(
         Maximum range of sensor(s) [m]
     m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
         Minimum range of sensor(s) [m], by default None
-    name : Optional[Union[str, Sequence[str]]], optional
-        Display name(s), by default None
-    description : Optional[Union[str, Sequence[str]]], optional
-        Display description(s), by default None
-    rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
-        Colour of polylines, by default None
-    n_arc_points : int, optional
+    n_arc_points : Union[int, Sequence[int]], optional
         Number of points to use to create the arc, by default 10
 
     Returns
@@ -125,8 +114,6 @@ def sensor_polyline(
 
     Raises
     ------
-    TypeError
-        _description_
     ShapeError
         _description_
     ShapeError
@@ -153,9 +140,7 @@ def sensor_polyline(
 
     # checks
     if isinstance(ddm_LLA, Sequence):
-        ddm_LLA = np.array(ddm_LLA)
-    elif not isinstance(ddm_LLA, np.ndarray):
-        raise TypeError("ddm_LLA must be a numpy array or sequence")
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim == 2 and ddm_LLA.shape != (3, 1):
         raise ShapeError("A single point must be of shape (3, 1)")
     elif ddm_LLA.ndim == 3 and ddm_LLA.shape[1:] != (3, 1):
@@ -212,18 +197,6 @@ def sensor_polyline(
         m_distance_min = np.array(m_distance_min)
     elif not isinstance(m_distance_min, np.ndarray):
         raise TypeError("m_distance_min must be an int, float, sequence or numpy array")
-    if isinstance(name, str):
-        name = [name]
-    elif name is None:
-        name = ["Sensor" for _ in range(ddm_LLA.shape[0])]
-    if isinstance(description, str):
-        description = [description]
-    elif description is None:
-        description = ["Sensor" for _ in range(ddm_LLA.shape[0])]
-    if rgba is None:
-        rgba = [RGBA.blue for _ in range(ddm_LLA.shape[0])]
-    elif isinstance(rgba[0], float):
-        rgba = [rgba for _ in range(ddm_LLA.shape[0])]  # type: ignore  # TODO FIX
     if not isinstance(n_arc_points, Sequence):
         n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
     if not (
@@ -234,12 +207,30 @@ def sensor_polyline(
         == deg_el_FOV.size
         == m_distance_max.size
         == m_distance_min.size
-        == len(name)
-        == len(description)
-        == len(rgba)
         == len(n_arc_points)
     ):
         raise MismatchedInputsError("All inputs must have same length")
+
+    # modify additional inputs
+    add_params_per_sensor: list[dict[str, Any]] = [{} for _ in range(ddm_LLA.shape[0])]
+    add_params_per_sensor_polyline: list[dict[str, Any]] = [
+        {} for _ in range(ddm_LLA.shape[0])
+    ]
+    for k, v in update_packets.items():
+        if isinstance(v, Polyline):
+            v.__dict__.pop("positions", None)
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor_polyline[i_sensor] = v.__dict__
+        elif isinstance(v, Sequence) and len(v) == ddm_LLA.shape[0]:
+            for i_sensor, v1 in enumerate(v):
+                if isinstance(v1, Polyline):
+                    v1.__dict__.pop("positions", None)
+                    add_params_per_sensor_polyline[i_sensor] = v1.__dict__
+                else:
+                    add_params_per_sensor[i_sensor][k] = v1
+        else:
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor[i_sensor][k] = v
 
     # convert to radians
     rrm_LLA = DDM2RRM(ddm_LLA)
@@ -362,8 +353,6 @@ def sensor_polyline(
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}line00-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -375,19 +364,14 @@ def sensor_polyline(
                                 ddm_LLA00[2, 0],
                             ]
                         ),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
                     ),
+                    **add_params_per_sensor[i_sensor],
                 )
             )
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}line01-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -399,19 +383,14 @@ def sensor_polyline(
                                 ddm_LLA01[2, 0],
                             ]
                         ),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
                     ),
+                    **add_params_per_sensor[i_sensor],
                 )
             )
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}line11-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -423,19 +402,14 @@ def sensor_polyline(
                                 ddm_LLA11[2, 0],
                             ]
                         ),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
                     ),
+                    **add_params_per_sensor[i_sensor],
                 )
             )
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}line10-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -447,12 +421,9 @@ def sensor_polyline(
                                 ddm_LLA10[2, 0],
                             ]
                         ),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
                     ),
+                    **add_params_per_sensor[i_sensor],
                 )
             )
 
@@ -491,16 +462,11 @@ def sensor_polyline(
                 out.append(
                     Packet(
                         id=str(uuid4()),
-                        name=name[i_sensor],
-                        description=description[i_sensor],
                         polyline=Polyline(
                             positions=PositionList(cartographicDegrees=ddm_LLA_arc),
-                            material=Material(
-                                solidColor=SolidColorMaterial(
-                                    color=Color(rgba=rgba[i_sensor])
-                                )
-                            ),
+                            **add_params_per_sensor_polyline[i_sensor],
                         ),
+                        **add_params_per_sensor[i_sensor],
                     )
                 )
 
@@ -539,16 +505,11 @@ def sensor_polyline(
                 out.append(
                     Packet(
                         id=f"sensor{i_sensor}-{rad_el}-{m_distance}-{str(uuid4())}",
-                        name=name[i_sensor],
-                        description=description[i_sensor],
                         polyline=Polyline(
                             positions=PositionList(cartographicDegrees=ddm_LLA_arc),
-                            material=Material(
-                                solidColor=SolidColorMaterial(
-                                    color=Color(rgba=rgba[i_sensor])
-                                )
-                            ),
+                            **add_params_per_sensor_polyline[i_sensor],
                         ),
+                        **add_params_per_sensor[i_sensor],
                     )
                 )
 
@@ -611,10 +572,8 @@ def sensor_polygon(
         ]
     ] = None,
     *,
-    name: Optional[Union[str, Sequence[str]]] = None,
-    description: Optional[Union[str, Sequence[str]]] = None,
-    rgba: Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]] = None,
     n_arc_points: Union[int, Sequence[int]] = 10,
+    **update_packets,
 ) -> list[Packet]:
     """Create a sensor using polygons.
 
@@ -634,12 +593,6 @@ def sensor_polygon(
         Maximum range of sensor(s) [m]
     m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
         Minimum range of sensor(s) [m], by default None
-    name : Optional[Union[str, Sequence[str]]], optional
-        Display name(s), by default None
-    description : Optional[Union[str, Sequence[str]]], optional
-        Display description(s), by default None
-    rgba : Optional[Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]]], optional
-        Colour of polygons, by default None
     n_arc_points : int, optional
         Number of points to use to create the arc, by default 10
 
@@ -678,9 +631,7 @@ def sensor_polygon(
 
     # checks
     if isinstance(ddm_LLA, Sequence):
-        ddm_LLA = np.array(ddm_LLA)
-    elif not isinstance(ddm_LLA, np.ndarray):
-        raise TypeError("ddm_LLA must be a numpy array or sequence")
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim == 2 and ddm_LLA.shape != (3, 1):
         raise ShapeError("A single point must be of shape (3, 1)")
     elif ddm_LLA.ndim == 3 and ddm_LLA.shape[1:] != (3, 1):
@@ -737,20 +688,6 @@ def sensor_polygon(
         m_distance_min = np.array(m_distance_min)
     elif not isinstance(m_distance_min, np.ndarray):
         raise TypeError("m_distance_min must be an int, float, sequence or numpy array")
-    if isinstance(name, str):
-        name = [name]
-    elif name is None:
-        name = ["Sensor" for _ in range(ddm_LLA.shape[0])]
-    if isinstance(description, str):
-        description = [description]
-    elif description is None:
-        description = ["Sensor" for _ in range(ddm_LLA.shape[0])]
-    if rgba is None:
-        c = RGBA.blue.copy()
-        c[3] = 100
-        rgba = [c for _ in range(ddm_LLA.shape[0])]
-    elif not isinstance(rgba[0], Sequence):
-        rgba = [rgba for _ in range(ddm_LLA.shape[0])]  # type: ignore  # TODO FIX
     if not isinstance(n_arc_points, Sequence):
         n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
     if not (
@@ -761,9 +698,6 @@ def sensor_polygon(
         == deg_el_FOV.size
         == m_distance_max.size
         == m_distance_min.size
-        == len(name)
-        == len(description)
-        == len(rgba)
         == len(n_arc_points)
     ):
         raise MismatchedInputsError("All inputs must have same length")
@@ -774,6 +708,29 @@ def sensor_polygon(
     rad_el_broadside = np.deg2rad(deg_el_broadside)
     rad_az_FOV = np.deg2rad(deg_az_FOV)
     rad_el_FOV = np.deg2rad(deg_el_FOV)
+
+    # modify additional inputs
+    add_params_per_sensor: list[dict[str, Any]] = [{} for _ in range(ddm_LLA.shape[0])]
+    add_params_per_sensor_polygon: list[dict[str, Any]] = [
+        {} for _ in range(ddm_LLA.shape[0])
+    ]
+    for k, v in update_packets.items():
+        if isinstance(v, Polygon):
+            v.__dict__.pop("positions", None)
+            v.__dict__.pop("perPositionHeight", None)
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor_polygon[i_sensor] = v.__dict__
+        elif isinstance(v, Sequence) and len(v) == ddm_LLA.shape[0]:
+            for i_sensor, v1 in enumerate(v):
+                if isinstance(v1, Polygon):
+                    v1.__dict__.pop("positions", None)
+                    v1.__dict__.pop("perPositionHeight", None)
+                    add_params_per_sensor_polygon[i_sensor] = v1.__dict__
+                else:
+                    add_params_per_sensor[i_sensor][k] = v1
+        else:
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor[i_sensor][k] = v
 
     out: list[Packet] = []
     for i_sensor in range(rrm_LLA.shape[0]):
@@ -825,17 +782,12 @@ def sensor_polygon(
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
                     polygon=Polygon(
                         perPositionHeight=True,
                         positions=PositionList(cartographicDegrees=ddm_LLA_arc),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
+                        **add_params_per_sensor_polygon[i_sensor],
                     ),
+                    **add_params_per_sensor[i_sensor],
                 )
             )
 
@@ -887,17 +839,12 @@ def sensor_polygon(
             out.append(
                 Packet(
                     id=f"sensor{i_sensor}-{str(uuid4())}",
-                    name=name[i_sensor],
-                    description=description[i_sensor],
                     polygon=Polygon(
                         perPositionHeight=True,
                         positions=PositionList(cartographicDegrees=ddm_LLA_arc),
-                        material=Material(
-                            solidColor=SolidColorMaterial(
-                                color=Color(rgba=rgba[i_sensor])
-                            )
-                        ),
+                        **add_params_per_sensor_polygon[i_sensor],
                     ),
+                    **add_params_per_sensor[i_sensor],
                 )
             )
 
@@ -953,17 +900,12 @@ def sensor_polygon(
                     out.append(
                         Packet(
                             id=f"sensor{i_sensor}-{str(uuid4())}",
-                            name=name[i_sensor],
-                            description=description[i_sensor],
                             polygon=Polygon(
                                 perPositionHeight=True,
                                 positions=PositionList(cartographicDegrees=ddm_LLA_arc),
-                                material=Material(
-                                    solidColor=SolidColorMaterial(
-                                        color=Color(rgba=rgba[i_sensor])
-                                    )
-                                ),
+                                **add_params_per_sensor_polygon[i_sensor],
                             ),
+                            **add_params_per_sensor[i_sensor],
                         )
                     )
                     ddm_LLA_arc = ddm_LLA_arc[n_arc_points[i_sensor] * 3 :]
@@ -976,14 +918,7 @@ def grid(
         npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
         Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
     ],
-    rgba: Optional[
-        Union[
-            npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
-            Sequence[COLOUR_TYPE],
-        ]
-    ] = None,
-    *,
-    description: Optional[Union[str, Sequence[str]]] = None,
+    **update_packets,
 ) -> list[Packet]:
     """Make a grid in CZML.
 
@@ -992,14 +927,28 @@ def grid(
     To support non-contiguous grids it is assumed that the resolution of the grid (in longitude and latitude) is the
     smallest difference between points.
 
-    :param ddm_LLA: 3D numpy array containing lat [deg], long [deg], alt [m] points
-    :param rgba: rgba of all grid points
+    Parameters
+    ----------
+    ddm_LLA : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
+        3D numpy array containing lat [deg], long [deg], alt [m] points
+
+    Returns
+    -------
+    list[Packet]
+        List of packets to create the grid
+
+    Raises
+    ------
+    TypeError
+        _description_
+    NumDimensionsError
+        _description_
+    ShapeError
+        _description_
     """
     # checks
     if isinstance(ddm_LLA, Sequence):
-        ddm_LLA = np.array(ddm_LLA)
-    elif not isinstance(ddm_LLA, np.ndarray):
-        raise TypeError("ddm_LLA must be a sequence of numpy array.")
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim != 3:
         raise NumDimensionsError(
             "Point(s) must either have three dimensions with shape (n, 3, 1)"
@@ -1008,34 +957,37 @@ def grid(
         raise ShapeError("ddm_LLA array must have a shape of (n, 3, 1)")
     ddm_LLA = ddm_LLA.copy()
     ddm_LLA[:, 2, 0] = 0
-    if rgba is None:
-        black = list(RGBA.black)
-        black[-1] = 100.0
-        rgba = np.ones((ddm_LLA.shape[0], 4)) * np.array(black)
-    if isinstance(rgba, Sequence):
-        rgba = np.array(rgba)
-    elif not isinstance(rgba, np.ndarray):
-        raise TypeError("rgba must be a sequence of numpy array.")
-    if rgba.ndim != 2:
-        raise NumDimensionsError(
-            "RGBA(s) must either have two dimensions with shape (n, 4)"
-        )
-    if rgba.shape[1] != 4:
-        raise ShapeError("RGBA array must have a shape of (n, 4)")
-    if rgba.shape[0] != ddm_LLA.shape[0]:
-        raise ShapeError("rgba input must be of same length as number of grid points")
-    if description is None:
-        description = ["" for _ in range(ddm_LLA.shape[0])]
-    if len(description) != ddm_LLA.shape[0]:
-        raise ShapeError(
-            "description input must be of same length as number of grid points"
-        )
 
     # range along latitude and longitude
     deg_deltas_lat = np.abs(ddm_LLA[:, 0, 0, np.newaxis] - ddm_LLA[:, 0, 0])
     deg_delta_lat = np.min(deg_deltas_lat[deg_deltas_lat > 0])
     deg_deltas_long = np.abs(ddm_LLA[:, 1, 0, np.newaxis] - ddm_LLA[:, 1, 0])
     deg_delta_long = np.min(deg_deltas_long[deg_deltas_long > 0])
+
+    # modify additional inputs
+    add_params_per_square: list[dict[str, Any]] = [{} for _ in range(ddm_LLA.shape[0])]
+    add_params_per_square_polygon: list[dict[str, Any]] = [
+        {} for _ in range(ddm_LLA.shape[0])
+    ]
+    for k, v in update_packets.items():
+        if isinstance(v, Polygon):
+            v.__dict__.pop("positions", None)
+            v.__dict__.pop("outline", None)
+            v.__dict__.pop("outlineColor", None)
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_square_polygon[i_sensor] = v.__dict__
+        elif isinstance(v, Sequence) and len(v) == ddm_LLA.shape[0]:
+            for i_sensor, v1 in enumerate(v):
+                if isinstance(v1, Polygon):
+                    v1.__dict__.pop("positions", None)
+                    v1.__dict__.pop("outline", None)
+                    v1.__dict__.pop("outlineColor", None)
+                    add_params_per_square_polygon[i_sensor] = v1.__dict__
+                else:
+                    add_params_per_square[i_sensor][k] = v1
+        else:
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_square[i_sensor][k] = v
 
     # build grid
     out: list[Packet] = []
@@ -1058,18 +1010,13 @@ def grid(
         out.append(
             Packet(
                 id=f"grid{i_centre}-{str(uuid4())}",
-                name=f"Grid #{i_centre}",
                 polygon=Polygon(
                     positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
-                    material=Material(
-                        solidColor=SolidColorMaterial(
-                            color=Color(rgba=rgba[i_centre].tolist())
-                        )
-                    ),
                     outlineColor=Color(rgba=[255, 255, 255, 255]),
                     outline=True,
+                    **add_params_per_square_polygon[i_centre],
                 ),
-                description=description[i_centre],
+                **add_params_per_square[i_centre],
             )
         )
     return out
@@ -1081,9 +1028,8 @@ def border(
         npt.NDArray[np.floating[TNP]],
         Sequence[Union[str, npt.NDArray[np.floating[TNP]]]],
     ],
-    names: Optional[Union[str, Sequence[str]]] = None,
-    rgba: Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]] = RGBA.white,
     step: Union[int, Sequence[int]] = 1,
+    **update_packets,
 ) -> list[Packet]:
     """Create a CZML3 packet of a border
 
@@ -1091,53 +1037,44 @@ def border(
     ----------
     borders : Union[ str, npt.NDArray[np.floating[TNP]], Sequence[Union[str, npt.NDArray[np.floating[TNP]]]], ]
         The border(s) packets requested
-    names : Optional[Union[str, Sequence[str]]], optional
-        Name for each border, by default None
-    rgba : Union[COLOUR_TYPE, Sequence[COLOUR_TYPE]], optional
-        Colour of polyline, by default RGBA.white
     step : Union[int, Sequence[int]], optional
         Step of border points, by default 1
 
     Returns
     -------
     list[Packet]
-        List of CZML3 packets.
+        List of CZML3 packets
 
     Raises
     ------
     TypeError
         _description_
-    TypeError
-        _description_
-    MismatchedInputsError
-        _description_
-    TypeError
-        _description_
     """
     if isinstance(borders, (str, np.ndarray)):
         borders = [borders]
-    if isinstance(borders, Sequence) and not all(
-        [isinstance(border, (str, np.ndarray)) for border in borders]
-    ):
-        raise TypeError("Borders must be a sequence of str or numpy arrays")
-    if names is None:
-        names = [border if isinstance(border, str) else "" for border in borders]
-    elif isinstance(names, str):
-        names = [names]
-    elif isinstance(names, Sequence) and not all(
-        [isinstance(name, str) for name in names]
-    ):
-        raise TypeError("Names must be a sequence of strings")
-    if isinstance(rgba, list) and isinstance(
-        rgba[0], (int, float, np.integer, np.floating)
-    ):
-        rgba = [rgba for _ in range(len(borders))]
     if isinstance(step, int):
         step = [step for _ in range(len(borders))]
 
-    # checks
-    if len(borders) != len(names) != len(rgba):
-        raise MismatchedInputsError("All inputs must have same length")
+    # modify additional inputs
+    add_params_per_border: list[dict[str, Any]] = [{} for _ in range(len(borders))]
+    add_params_per_border_polyline: list[dict[str, Any]] = [
+        {} for _ in range(len(borders))
+    ]
+    for k, v in update_packets.items():
+        if isinstance(v, Polyline):
+            v.__dict__.pop("positions", None)
+            for i_sensor in range(len(borders)):
+                add_params_per_border_polyline[i_sensor] = v.__dict__
+        elif isinstance(v, Sequence) and len(v) == len(borders):
+            for i_sensor, v1 in enumerate(v):
+                if isinstance(v1, Polyline):
+                    v1.__dict__.pop("positions", None)
+                    add_params_per_border_polyline[i_sensor] = v1.__dict__
+                else:
+                    add_params_per_border[i_sensor][k] = v1
+        else:
+            for i_sensor in range(len(borders)):
+                add_params_per_border[i_sensor][k] = v
 
     out: list[Packet] = []
     for i_border in range(len(borders)):
@@ -1153,18 +1090,16 @@ def border(
 
         out.append(
             Packet(
-                id=f"border-{names[i_border]}-{str(uuid4())}",
-                name=names[i_border],
+                id=f"border-{str(uuid4())}",
                 polyline=Polyline(
                     positions=PositionList(
                         cartographicDegrees=ddm_LLA_border[:: step[i_border], [1, 0, 2]]
                         .ravel()
                         .tolist()
                     ),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba[i_border]))
-                    ),
+                    **add_params_per_border_polyline[i_border],
                 ),
+                **add_params_per_border[i_border],
             )
         )
     return out
@@ -1177,21 +1112,22 @@ def coverage(
     dd_LL_holes: Optional[
         Union[Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]]
     ] = None,
-    rgba: COLOUR_TYPE = RGBA.black,
-    *,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
+    **update_packets,
 ) -> list[Packet]:
     """Create czml3 packets of coverage (including holes).
 
-    :param [Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]] dd_LL_coverages: Contours of coverages
-    :param [Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]] dd_LL_holes: Contours of holes
-    :param Sequence[TNUM] rgba: _description_, defaults to [255, 255, 255, 100]
-    :param Optional[str] name: Name of each packet for packet, defaults to None
-    :param Optional[str] description: Description for packet, defaults to None
-    :return list[Packet]: _description_
-    """
+    Parameters
+    ----------
+    dd_LL_coverages : Union[ Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]] ]
+        Contours of coverages
+    dd_LL_holes : Optional[ Union[Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]] ], optional
+        Contours of holes, by default None
 
+    Returns
+    -------
+    list[Packet]
+        List of CZML3 packets
+    """
     if not isinstance(dd_LL_coverages, Sequence):
         dd_LL_coverages = [dd_LL_coverages]
     if dd_LL_holes is None:
@@ -1213,6 +1149,19 @@ def coverage(
     # create MultiPolygon
     multipolygon_coverage_per_sensor = shapely.MultiPolygon(polys_coverage)
 
+    # modify additional inputs
+    add_params1: dict[str, Any] = {}
+    add_params_polygon: dict[str, Any] = {}
+    for k, v in update_packets.items():
+        if isinstance(v, Polygon):
+            v.__dict__.pop("positions", None)
+            v.__dict__.pop("holes", None)
+            v.__dict__.pop("outlineColor", None)
+            v.__dict__.pop("outline", None)
+            add_params_polygon = v.__dict__
+        else:
+            add_params1[k] = v
+
     # create packets
     out: list[Packet] = []
     for polygon in multipolygon_coverage_per_sensor.geoms:
@@ -1224,19 +1173,16 @@ def coverage(
         out.append(
             Packet(
                 id=f"coverage-{str(uuid4())}",
-                name=name,
                 polygon=Polygon(
                     positions=PositionList(
                         cartographicDegrees=ddm_polygon[:, [1, 0, 2]].ravel().tolist()
                     ),
                     holes=PositionListOfLists(cartographicDegrees=ddm_holes),
-                    material=Material(
-                        solidColor=SolidColorMaterial(color=Color(rgba=rgba))
-                    ),
                     outlineColor=Color(rgba=[255, 253, 55, 255]),
                     outline=True,
+                    **add_params_polygon,
                 ),
-                description=description,
+                **add_params1,
             )
         )
     return out
