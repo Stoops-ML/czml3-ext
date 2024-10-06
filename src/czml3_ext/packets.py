@@ -13,7 +13,7 @@ from czml3.properties import (
     PositionList,
     PositionListOfLists,
 )
-from transforms84.helpers import DDM2RRM, RRM2DDM
+from transforms84.helpers import DDM2RRM, RRM2DDM, wrap
 from transforms84.systems import WGS84
 from transforms84.transforms import (
     AER2ENU,
@@ -441,11 +441,13 @@ def sensor_polyline(
                 rad_az %= 2 * np.pi
                 ddm_LLA_arc = []
                 for i_arc in range(n_arc_points[i_sensor]):
-                    rad_el0 = (
+                    rad_el0 = wrap(
                         rad_el_broadside[i_sensor]
                         - rad_el_FOV[i_sensor] / 2
-                        + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
-                    ) % (2 * np.pi)
+                        + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1),
+                        -np.pi,
+                        np.pi,
+                    )
                     ddm_LLA_point = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
@@ -481,7 +483,7 @@ def sensor_polyline(
                 rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2,
                 rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2,
             ):
-                rad_el %= np.pi
+                rad_el = wrap(rad_el, -np.pi, np.pi)
                 ddm_LLA_arc = []
                 for i_arc in range(n_arc_points[i_sensor]):
                     rad_az = (
@@ -758,21 +760,25 @@ def sensor_polygon(
             ):
                 for i_arc0 in range(n_arc_points[i_sensor]):
                     if i_m == 0:
-                        rad_el = (
+                        rad_el = wrap(
                             rad_el_broadside[i_sensor]
                             - rad_el_FOV[i_sensor] / 2
                             + rad_el_FOV[i_sensor]
                             * i_arc0
-                            / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                            / (n_arc_points[i_sensor] - 1),
+                            -np.pi,
+                            np.pi,
+                        )
                     else:
-                        rad_el = (
+                        rad_el = wrap(
                             rad_el_broadside[i_sensor]
                             + rad_el_FOV[i_sensor] / 2
                             - rad_el_FOV[i_sensor]
                             * i_arc0
-                            / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                            / (n_arc_points[i_sensor] - 1),
+                            -np.pi,
+                            np.pi,
+                        )
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
@@ -821,7 +827,7 @@ def sensor_polygon(
                             + rad_az_FOV[i_sensor]
                             * i_arc0
                             / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                        ) % (2 * np.pi)
                     else:
                         rad_az = (
                             rad_az_broadside[i_sensor]
@@ -829,7 +835,7 @@ def sensor_polygon(
                             - rad_az_FOV[i_sensor]
                             * i_arc0
                             / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                        ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
@@ -868,11 +874,13 @@ def sensor_polygon(
             # azimuth arcs along every elevation
             ddm_LLA_arc = []
             for i_arc0 in range(n_arc_points[i_sensor]):
-                rad_el = (
+                rad_el = wrap(
                     rad_el_broadside[i_sensor]
                     - rad_el_FOV[i_sensor] / 2
-                    + rad_el_FOV[i_sensor] * i_arc0 / (n_arc_points[i_sensor] - 1)
-                ) % np.pi
+                    + rad_el_FOV[i_sensor] * i_arc0 / (n_arc_points[i_sensor] - 1),
+                    -np.pi,
+                    np.pi,
+                )
                 for i_arc1 in range(n_arc_points[i_sensor]):
                     if i_arc0 % 2 == 0:
                         rad_az = (
