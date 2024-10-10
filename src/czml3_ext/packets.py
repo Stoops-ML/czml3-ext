@@ -84,7 +84,7 @@ def sensor_polyline(
     ] = None,
     *,
     n_arc_points: Union[int, Sequence[int]] = 10,
-    **update_packets: dict[str, Any],
+    **update_packets,
 ) -> list[Packet]:
     """Create a sensor using polylines.
 
@@ -581,7 +581,7 @@ def sensor_polygon(
     ] = None,
     *,
     n_arc_points: Union[int, Sequence[int]] = 10,
-    **update_packets: dict[str, Any],
+    **update_packets,
 ) -> list[Packet]:
     """Create a sensor using polygons.
 
@@ -941,7 +941,7 @@ def grid(
     ],
     deg_zero_tolerance_lat: float = 10e-5,
     deg_zero_tolerance_long: float = 10e-5,
-    **update_packets: dict[str, Any],
+    **update_packets,
 ) -> list[Packet]:
     """Make a grid in CZML.
 
@@ -1070,7 +1070,7 @@ def border(
         Sequence[Union[str, npt.NDArray[np.floating[TNP]]]],
     ],
     step: Union[int, Sequence[int]] = 1,
-    **update_packets: dict[str, Any],
+    **update_packets,
 ) -> list[Packet]:
     """Create a CZML3 packet of a border.
 
@@ -1159,7 +1159,7 @@ def coverage(
     dd_LL_holes: Optional[
         Union[Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]]
     ] = None,
-    **update_packets: dict[str, Any],
+    **update_packets,
 ) -> list[Packet]:
     """Create czml3 packets of coverage (including holes).
 
