@@ -13,7 +13,7 @@ from czml3.properties import (
     PositionList,
     PositionListOfLists,
 )
-from transforms84.helpers import DDM2RRM, RRM2DDM
+from transforms84.helpers import DDM2RRM, RRM2DDM, wrap
 from transforms84.systems import WGS84
 from transforms84.transforms import (
     AER2ENU,
@@ -441,11 +441,13 @@ def sensor_polyline(
                 rad_az %= 2 * np.pi
                 ddm_LLA_arc = []
                 for i_arc in range(n_arc_points[i_sensor]):
-                    rad_el0 = (
+                    rad_el0 = wrap(
                         rad_el_broadside[i_sensor]
                         - rad_el_FOV[i_sensor] / 2
-                        + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
-                    ) % (2 * np.pi)
+                        + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1),
+                        -np.pi,
+                        np.pi,
+                    )
                     ddm_LLA_point = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
@@ -481,7 +483,7 @@ def sensor_polyline(
                 rad_el_broadside[i_sensor] - rad_el_FOV[i_sensor] / 2,
                 rad_el_broadside[i_sensor] + rad_el_FOV[i_sensor] / 2,
             ):
-                rad_el %= np.pi
+                rad_el = wrap(rad_el, -np.pi, np.pi)
                 ddm_LLA_arc = []
                 for i_arc in range(n_arc_points[i_sensor]):
                     rad_az = (
@@ -758,21 +760,25 @@ def sensor_polygon(
             ):
                 for i_arc0 in range(n_arc_points[i_sensor]):
                     if i_m == 0:
-                        rad_el = (
+                        rad_el = wrap(
                             rad_el_broadside[i_sensor]
                             - rad_el_FOV[i_sensor] / 2
                             + rad_el_FOV[i_sensor]
                             * i_arc0
-                            / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                            / (n_arc_points[i_sensor] - 1),
+                            -np.pi,
+                            np.pi,
+                        )
                     else:
-                        rad_el = (
+                        rad_el = wrap(
                             rad_el_broadside[i_sensor]
                             + rad_el_FOV[i_sensor] / 2
                             - rad_el_FOV[i_sensor]
                             * i_arc0
-                            / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                            / (n_arc_points[i_sensor] - 1),
+                            -np.pi,
+                            np.pi,
+                        )
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
@@ -821,7 +827,7 @@ def sensor_polygon(
                             + rad_az_FOV[i_sensor]
                             * i_arc0
                             / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                        ) % (2 * np.pi)
                     else:
                         rad_az = (
                             rad_az_broadside[i_sensor]
@@ -829,7 +835,7 @@ def sensor_polygon(
                             - rad_az_FOV[i_sensor]
                             * i_arc0
                             / (n_arc_points[i_sensor] - 1)
-                        ) % np.pi
+                        ) % (2 * np.pi)
                     ddm_LLA_point0 = RRM2DDM(
                         ECEF2geodetic(
                             ENU2ECEF(
@@ -868,11 +874,13 @@ def sensor_polygon(
             # azimuth arcs along every elevation
             ddm_LLA_arc = []
             for i_arc0 in range(n_arc_points[i_sensor]):
-                rad_el = (
+                rad_el = wrap(
                     rad_el_broadside[i_sensor]
                     - rad_el_FOV[i_sensor] / 2
-                    + rad_el_FOV[i_sensor] * i_arc0 / (n_arc_points[i_sensor] - 1)
-                ) % np.pi
+                    + rad_el_FOV[i_sensor] * i_arc0 / (n_arc_points[i_sensor] - 1),
+                    -np.pi,
+                    np.pi,
+                )
                 for i_arc1 in range(n_arc_points[i_sensor]):
                     if i_arc0 % 2 == 0:
                         rad_az = (
@@ -931,6 +939,8 @@ def grid(
         npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
         Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
     ],
+    deg_zero_tolerance_lat: float = 10e-5,
+    deg_zero_tolerance_long: float = 10e-5,
     **update_packets,
 ) -> list[Packet]:
     """Make a grid in CZML.
@@ -939,6 +949,8 @@ def grid(
     64 bit floats are recommended if the grid has high resolution.
     To support non-contiguous grids it is assumed that the resolution of the grid (in longitude and latitude) is the
     smallest difference between points.
+
+    If the polygons of the grid are extremely small then play with deg_zero_tolerance_lat and deg_zero_tolerance_long: increasing these values will find the correct minimum latittudes and longitudes (in degrees).
 
     All packets in the output may be updated using kwargs.
     If the value of the kwarg is a sequence with the length of the number of grid points then each value will be assigned to the CZML3 packet of it's corresponding grid point.
@@ -952,6 +964,10 @@ def grid(
     ----------
     ddm_LLA : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
         3D numpy array containing lat [deg], long [deg], alt [m] points
+    deg_zero_tolerance_lat : float
+        Tolerance of 0 degrees for latittude
+    deg_zero_tolerance_long : float
+        Tolerance of 0 degrees for longitude
 
     Returns
     -------
@@ -968,6 +984,10 @@ def grid(
         _description_
     """
     # checks
+    if deg_zero_tolerance_lat < 0:
+        raise ValueError("deg_zero_tolerance_lat must be equal to or larger than 0.")
+    if deg_zero_tolerance_long < 0:
+        raise ValueError("deg_zero_tolerance_long must be equal to or larger than 0.")
     if isinstance(ddm_LLA, Sequence):
         ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim != 3:
@@ -981,9 +1001,9 @@ def grid(
 
     # range along latitude and longitude
     deg_deltas_lat = np.abs(ddm_LLA[:, 0, 0, np.newaxis] - ddm_LLA[:, 0, 0])
-    deg_delta_lat = np.min(deg_deltas_lat[deg_deltas_lat > 0])
+    deg_delta_lat = np.min(deg_deltas_lat[deg_deltas_lat > deg_zero_tolerance_lat])
     deg_deltas_long = np.abs(ddm_LLA[:, 1, 0, np.newaxis] - ddm_LLA[:, 1, 0])
-    deg_delta_long = np.min(deg_deltas_long[deg_deltas_long > 0])
+    deg_delta_long = np.min(deg_deltas_long[deg_deltas_long > deg_zero_tolerance_long])
 
     # modify additional inputs
     add_params_per_square: list[dict[str, Any]] = [{} for _ in range(ddm_LLA.shape[0])]
