@@ -7,7 +7,6 @@ import numpy.typing as npt
 import shapely
 from czml3 import Packet
 from czml3.properties import (
-    Color,
     Polygon,
     Polyline,
     PositionList,
@@ -941,6 +940,12 @@ def grid(
     ],
     deg_zero_tolerance_lat: float = 10e-5,
     deg_zero_tolerance_long: float = 10e-5,
+    *,
+    ddm_LLA_cut: Union[
+        None,
+        npt.NDArray[np.floating[TNP]],
+        Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
+    ] = None,
     **update_packets,
 ) -> list[Packet]:
     """Make a grid in CZML.
@@ -957,17 +962,17 @@ def grid(
     If the value of the kwarg is not a sequence with the length of the number of grid points then the value will be assigned to the CZML3 packets of all grid points.
     Note that the following czml3.properties.Polygon properties are ignored:
         - positions
-        - outline
-        - outlineColor
 
     Parameters
     ----------
     ddm_LLA : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
-        3D numpy array containing lat [deg], long [deg], alt [m] points
+        3D numpy array or sequence containing lat [deg], long [deg], alt [m] points
     deg_zero_tolerance_lat : float
         Tolerance of 0 degrees for latittude
     deg_zero_tolerance_long : float
         Tolerance of 0 degrees for longitude
+    ddm_LLA_cut : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
+        3D numpy array or sequence containing lat [deg], long [deg], alt [m] points that will cut the polygons.
 
     Returns
     -------
@@ -977,6 +982,10 @@ def grid(
     Raises
     ------
     TypeError
+        _description_
+    NumDimensionsError
+        _description_
+    ShapeError
         _description_
     NumDimensionsError
         _description_
@@ -992,12 +1001,20 @@ def grid(
         ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
     if ddm_LLA.ndim != 3:
         raise NumDimensionsError(
-            "Point(s) must either have three dimensions with shape (n, 3, 1)"
+            "Point(s) must have three dimensions with shape (n, 3, 1)"
         )
     if ddm_LLA.shape[1:] != (3, 1):
         raise ShapeError("ddm_LLA array must have a shape of (n, 3, 1)")
     ddm_LLA = ddm_LLA.copy()
     ddm_LLA[:, 2, 0] = 0
+    if ddm_LLA_cut is not None and isinstance(ddm_LLA_cut, Sequence):
+        ddm_LLA_cut = np.array(ddm_LLA_cut).reshape((-1, 3, 1))
+    if ddm_LLA_cut is not None and ddm_LLA_cut.ndim != 3:
+        raise NumDimensionsError(
+            "Border point must have three dimensions with shape (n, 3, 1)"
+        )
+    if ddm_LLA_cut is not None and ddm_LLA_cut.shape[1:] != (3, 1):
+        raise ShapeError("ddm_LLA_border array must have a shape of (n, 3, 1)")
 
     # range along latitude and longitude
     deg_deltas_lat = np.abs(ddm_LLA[:, 0, 0, np.newaxis] - ddm_LLA[:, 0, 0])
@@ -1013,16 +1030,12 @@ def grid(
     for k, v in update_packets.items():
         if isinstance(v, Polygon):
             v.__dict__.pop("positions", None)
-            v.__dict__.pop("outline", None)
-            v.__dict__.pop("outlineColor", None)
             for i_sensor in range(ddm_LLA.shape[0]):
                 add_params_per_square_polygon[i_sensor] = v.__dict__
         elif isinstance(v, Sequence) and len(v) == ddm_LLA.shape[0]:
             for i_sensor, v1 in enumerate(v):
                 if isinstance(v1, Polygon):
                     v1.__dict__.pop("positions", None)
-                    v1.__dict__.pop("outline", None)
-                    v1.__dict__.pop("outlineColor", None)
                     add_params_per_square_polygon[i_sensor] = v1.__dict__
                 else:
                     add_params_per_square[i_sensor][k] = v1
@@ -1031,6 +1044,8 @@ def grid(
                 add_params_per_square[i_sensor][k] = v
 
     # build grid
+    if ddm_LLA_cut is not None:
+        poly_border = shapely.Polygon(ddm_LLA_cut[:, :2, 0])
     out: list[Packet] = []
     for i_centre in range(ddm_LLA.shape[0]):
         # build polygon
@@ -1048,18 +1063,54 @@ def grid(
             float(ddm_LLA[i_centre, 0, 0] - deg_delta_lat / 2),
             0.0,
         ]
-        out.append(
-            Packet(
-                id=f"grid{i_centre}-{str(uuid4())}",
-                polygon=Polygon(
-                    positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
-                    outlineColor=Color(rgba=[255, 255, 255, 255]),
-                    outline=True,
-                    **add_params_per_square_polygon[i_centre],
-                ),
-                **add_params_per_square[i_centre],
+
+        # cut with border
+        if ddm_LLA_cut is not None:
+            poly_polygon = shapely.Polygon(
+                np.array(ddm_LLA_polygon).T.reshape((-1, 3, 1))[:, [1, 0], 0]
             )
-        )
+            if not (
+                poly_border.contains(poly_polygon)
+                or poly_border.intersects(poly_polygon)
+            ):
+                continue
+            elif poly_border.intersects(poly_polygon):
+                poly_intersects = poly_border.intersection(poly_polygon)
+                if isinstance(poly_intersects, shapely.Polygon):
+                    poly_intersects = [poly_intersects]
+                elif isinstance(poly_intersects, shapely.MultiPolygon):
+                    poly_intersects = list(poly_intersects.geoms)
+                for poly_intersect in poly_intersects:
+                    np_ddm_LLA_polygon = np.zeros(
+                        (len(poly_intersect.exterior.coords.xy[0]), 3), dtype=np.float32
+                    )
+                    np_ddm_LLA_polygon[:, :2] = np.array(
+                        poly_intersect.exterior.coords.xy
+                    ).T.reshape((-1, 2))[:, [1, 0]]
+                    ddm_LLA_polygon = np_ddm_LLA_polygon.ravel().tolist()
+                    out.append(
+                        Packet(
+                            id=str(uuid4()),
+                            polygon=Polygon(
+                                positions=PositionList(
+                                    cartographicDegrees=ddm_LLA_polygon
+                                ),
+                                **add_params_per_square_polygon[i_centre],
+                            ),
+                            **add_params_per_square[i_centre],
+                        )
+                    )
+        else:
+            out.append(
+                Packet(
+                    id=str(uuid4()),
+                    polygon=Polygon(
+                        positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
+                        **add_params_per_square_polygon[i_centre],
+                    ),
+                    **add_params_per_square[i_centre],
+                )
+            )
     return out
 
 
@@ -1211,8 +1262,6 @@ def coverage(
         if isinstance(v, Polygon):
             v.__dict__.pop("positions", None)
             v.__dict__.pop("holes", None)
-            v.__dict__.pop("outlineColor", None)
-            v.__dict__.pop("outline", None)
             add_params_polygon = v.__dict__
         else:
             add_params1[k] = v
@@ -1233,8 +1282,6 @@ def coverage(
                         cartographicDegrees=ddm_polygon[:, [1, 0, 2]].ravel().tolist()
                     ),
                     holes=PositionListOfLists(cartographicDegrees=ddm_holes),
-                    outlineColor=Color(rgba=[255, 253, 55, 255]),
-                    outline=True,
                     **add_params_polygon,
                 ),
                 **add_params1,
