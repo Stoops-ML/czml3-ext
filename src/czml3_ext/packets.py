@@ -1263,8 +1263,6 @@ def coverage(
         if isinstance(v, Polygon):
             v.__dict__.pop("positions", None)
             v.__dict__.pop("holes", None)
-            v.__dict__.pop("outlineColor", None)
-            v.__dict__.pop("outline", None)
             add_params_polygon = v.__dict__
         else:
             add_params1[k] = v
@@ -1285,8 +1283,6 @@ def coverage(
                         cartographicDegrees=ddm_polygon[:, [1, 0, 2]].ravel().tolist()
                     ),
                     holes=PositionListOfLists(cartographicDegrees=ddm_holes),
-                    outlineColor=Color(rgba=[255, 253, 55, 255]),
-                    outline=True,
                     **add_params_polygon,
                 ),
                 **add_params1,
