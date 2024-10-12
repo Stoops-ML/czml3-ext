@@ -7,7 +7,6 @@ import numpy.typing as npt
 import shapely
 from czml3 import Packet
 from czml3.properties import (
-    Color,
     Polygon,
     Polyline,
     PositionList,
