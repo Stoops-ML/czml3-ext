@@ -16,7 +16,7 @@ This library is a collection of functions that outputs `list`s of `czml3.packet`
 `pip install czml3-ext`
 
 ## Examples
-See the example [notebook](examples/examples.ipynb) for a full demo of the package. Run `pip install czml3_ext[examples]` to run the examples locally.
+See the example [notebook](https://github.com/Stoops-ML/czml3-ext/blob/main/examples/examples.ipynb) for a full demo of the package. Run `pip install czml3_ext[examples]` to run the examples locally.
 
 The following code produces a CZML file with a single sensor:
 ```
