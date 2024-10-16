@@ -549,7 +549,7 @@ def sensor_polyline(
         ]
     ] = None,
     *,
-    n_arc_points: Union[int, Sequence[int]] = 10,
+    subdivisions: Union[int, Sequence[int]] = 10,
     **update_packets,
 ) -> list[Packet]:
     """Create a sensor using polylines.
@@ -576,7 +576,7 @@ def sensor_polyline(
         Maximum range of sensor(s) [m]
     m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
         Minimum range of sensor(s) [m], by default None
-    n_arc_points : Union[int, Sequence[int]], optional
+    subdivisions : Union[int, Sequence[int]], optional
         Number of points to use to create the arcs, by default 10
 
     Returns
@@ -669,8 +669,8 @@ def sensor_polyline(
         m_distance_min = np.array(m_distance_min)
     elif not isinstance(m_distance_min, np.ndarray):
         raise TypeError("m_distance_min must be an int, float, sequence or numpy array")
-    if not isinstance(n_arc_points, Sequence):
-        n_arc_points = [n_arc_points for _ in range(ddm_LLA.shape[0])]
+    if not isinstance(subdivisions, Sequence):
+        subdivisions = [subdivisions for _ in range(ddm_LLA.shape[0])]
     if not (
         ddm_LLA.shape[0]
         == deg_az_broadside.size
@@ -679,7 +679,7 @@ def sensor_polyline(
         == deg_el_FOV.size
         == m_distance_max.size
         == m_distance_min.size
-        == len(n_arc_points)
+        == len(subdivisions)
     ):
         raise MismatchedInputsError("All inputs must have same length")
 
@@ -906,11 +906,11 @@ def sensor_polyline(
             ):
                 rad_az %= 2 * np.pi
                 ddm_LLA_arc = []
-                for i_arc in range(n_arc_points[i_sensor]):
+                for i_arc in range(subdivisions[i_sensor]):
                     rad_el0 = wrap(
                         rad_el_broadside[i_sensor]
                         - rad_el_FOV[i_sensor] / 2
-                        + rad_el_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1),
+                        + rad_el_FOV[i_sensor] * i_arc / (subdivisions[i_sensor] - 1),
                         -np.pi,
                         np.pi,
                     )
@@ -951,11 +951,11 @@ def sensor_polyline(
             ):
                 rad_el = wrap(rad_el, -np.pi, np.pi)
                 ddm_LLA_arc = []
-                for i_arc in range(n_arc_points[i_sensor]):
+                for i_arc in range(subdivisions[i_sensor]):
                     rad_az = (
                         rad_az_broadside[i_sensor]
                         - rad_az_FOV[i_sensor] / 2
-                        + rad_az_FOV[i_sensor] * i_arc / (n_arc_points[i_sensor] - 1)
+                        + rad_az_FOV[i_sensor] * i_arc / (subdivisions[i_sensor] - 1)
                     ) % (2 * np.pi)
                     ddm_LLA_point = RRM2DDM(
                         ECEF2geodetic(
