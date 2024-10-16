@@ -7,8 +7,11 @@ import numpy.typing as npt
 import shapely
 from czml3 import Packet
 from czml3.properties import (
+    Ellipsoid,
+    EllipsoidRadii,
     Polygon,
     Polyline,
+    Position,
     PositionList,
     PositionListOfLists,
 )
@@ -24,6 +27,470 @@ from .definitions import TNP
 from .errors import DataTypeError, MismatchedInputsError, NumDimensionsError, ShapeError
 from .helpers import get_border
 from .shapely_helpers import linear_ring2LLA, poly2LLA
+
+
+def sensor_ellipsoid(
+    ddm_LLA: Union[
+        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
+        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
+    ],
+    deg_az_broadside: Union[
+        int,
+        float,
+        np.floating[TNP],
+        np.integer[TNP],
+        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
+        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
+    ],
+    deg_el_broadside: Union[
+        int,
+        float,
+        np.floating[TNP],
+        np.integer[TNP],
+        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
+        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
+    ],
+    deg_az_FOV: Union[
+        int,
+        float,
+        np.floating[TNP],
+        np.integer[TNP],
+        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
+        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
+    ],
+    deg_el_FOV: Union[
+        int,
+        float,
+        np.floating[TNP],
+        np.integer[TNP],
+        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
+        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
+    ],
+    m_distance_max: Union[
+        int,
+        float,
+        np.floating[TNP],
+        np.integer[TNP],
+        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
+        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
+    ],
+    m_distance_min: Optional[
+        Union[
+            int,
+            float,
+            np.floating[TNP],
+            np.integer[TNP],
+            Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
+            npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
+        ]
+    ] = None,
+    *,
+    show_minimum_range_polyline: bool = True,
+    **update_packets,
+) -> list[Packet]:
+    """Create a sensor.
+
+    All packets in the output may be updated using kwargs.
+    If the value of the kwarg is a sequence with the length of the number of sensors then each value will be assigned to the CZML3 packet of it's corresponding sensor.
+    If the value of the kwarg is not a sequence with the length of the number of sensors then the value will be assigned to the CZML3 packets of all sensors.
+    The following czml3.properties.Polyline properties are ignored:
+        - positions
+    The following czml3.properties.Ellipsoid properties are ignored:
+        - minimumClock
+        - maximumClock
+        - minimumCone
+        - maximumCone
+        - radii
+        - innerRadii
+
+    Parameters
+    ----------
+    ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Location of sensor(s) in LLA [deg, deg, m] of shape (3, 1) for one sensor of (n, 3, 1) for n sensors
+    deg_az_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth of sensor(s) [deg]
+    deg_el_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation of sensor(s) [deg]
+    deg_az_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Azimuth FOV of sensor(s) [deg]
+    deg_el_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Elevation FOV of sensor(s) [deg]
+    m_distance_max : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+        Maximum range of sensor(s) [m]
+    m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
+        Minimum range of sensor(s) [m], by default None
+
+    Returns
+    -------
+    list[Packet]
+        List of CZML3 packets.
+
+    Raises
+    ------
+    ShapeError
+        _description_
+    ShapeError
+        _description_
+    NumDimensionsError
+        _description_
+    DataTypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    TypeError
+        _description_
+    MismatchedInputsError
+        _description_
+    """
+
+    # checks
+    if isinstance(ddm_LLA, Sequence):
+        ddm_LLA = np.array(ddm_LLA).reshape((-1, 3, 1))
+    if ddm_LLA.ndim == 2 and ddm_LLA.shape != (3, 1):
+        raise ShapeError("A single point must be of shape (3, 1)")
+    elif ddm_LLA.ndim == 3 and ddm_LLA.shape[1:] != (3, 1):
+        raise ShapeError("Multiple points must be of shape (n, 3, 1)")
+    elif not (ddm_LLA.ndim == 2 or ddm_LLA.ndim == 3):
+        raise NumDimensionsError(
+            "Point(s) must either have two dimensions with shape (3, 1) or (n, 3, 1)"
+        )
+
+    # make all inputs into sequences
+    if ddm_LLA.ndim == 2:
+        ddm_LLA = ddm_LLA[None, :]
+    if not isinstance(ddm_LLA[0, 0, 0], np.floating):
+        raise DataTypeError("Point(s) array must have a floating point data type")
+    if np.isscalar(deg_az_broadside):
+        deg_az_broadside = np.array([deg_az_broadside])
+    elif isinstance(deg_az_broadside, Sequence):
+        deg_az_broadside = np.array(deg_az_broadside)
+    elif not isinstance(deg_az_broadside, np.ndarray):
+        raise TypeError(
+            "deg_az_broadside must be an int, float, sequence or numpy array"
+        )
+    if np.isscalar(deg_el_broadside):
+        deg_el_broadside = np.array([deg_el_broadside])
+    elif isinstance(deg_el_broadside, Sequence):
+        deg_el_broadside = np.array(deg_el_broadside)
+    elif not isinstance(deg_el_broadside, np.ndarray):
+        raise TypeError(
+            "deg_el_broadside must be an int, float, sequence or numpy array"
+        )
+    if np.isscalar(deg_az_FOV):
+        deg_az_FOV = np.array([deg_az_FOV])
+    elif isinstance(deg_az_FOV, Sequence):
+        deg_az_FOV = np.array(deg_az_FOV)
+    elif not isinstance(deg_az_FOV, np.ndarray):
+        raise TypeError("deg_az_FOV must be an int, float, sequence or numpy array")
+    if np.isscalar(deg_el_FOV):
+        deg_el_FOV = np.array([deg_el_FOV])
+    elif isinstance(deg_el_FOV, Sequence):
+        deg_el_FOV = np.array(deg_el_FOV)
+    elif not isinstance(deg_el_FOV, np.ndarray):
+        raise TypeError("deg_el_FOV must be an int, float, sequence or numpy array")
+    if np.isscalar(m_distance_max):
+        m_distance_max = np.array([m_distance_max])
+    elif isinstance(m_distance_max, Sequence):
+        m_distance_max = np.array(m_distance_max)
+    elif not isinstance(m_distance_max, np.ndarray):
+        raise TypeError("m_distance_max must be an int, float, sequence or numpy array")
+    if m_distance_min is None:
+        m_distance_min = np.zeros_like(m_distance_max)
+    elif np.isscalar(m_distance_min):
+        m_distance_min = np.array([m_distance_min])
+    elif isinstance(m_distance_min, Sequence):
+        m_distance_min = np.array(m_distance_min)
+    elif not isinstance(m_distance_min, np.ndarray):
+        raise TypeError("m_distance_min must be an int, float, sequence or numpy array")
+    if not (
+        ddm_LLA.shape[0]
+        == deg_az_broadside.size
+        == deg_el_broadside.size
+        == deg_az_FOV.size
+        == deg_el_FOV.size
+        == m_distance_max.size
+        == m_distance_min.size
+    ):
+        raise MismatchedInputsError("All inputs must have same length")
+
+    # modify additional inputs
+    add_params_per_sensor: list[dict[str, Any]] = [{} for _ in range(ddm_LLA.shape[0])]
+    add_params_per_sensor_polyline: list[dict[str, Any]] = [
+        {} for _ in range(ddm_LLA.shape[0])
+    ]
+    add_params_per_sensor_ellipsoid: list[dict[str, Any]] = [
+        {} for _ in range(ddm_LLA.shape[0])
+    ]
+    for k, v in update_packets.items():
+        if isinstance(v, Polyline):
+            v.__dict__.pop("positions", None)
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor_polyline[i_sensor] = v.__dict__
+        elif isinstance(v, Ellipsoid):
+            v.__dict__.pop("minimumClock", None)
+            v.__dict__.pop("maximumClock", None)
+            v.__dict__.pop("minimumCone", None)
+            v.__dict__.pop("maximumCone", None)
+            v.__dict__.pop("radii", None)
+            v.__dict__.pop("innerRadii", None)
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor_ellipsoid[i_sensor] = v.__dict__
+        elif isinstance(v, Sequence) and len(v) == ddm_LLA.shape[0]:
+            for i_sensor, v1 in enumerate(v):
+                if isinstance(v1, Polyline):
+                    v1.__dict__.pop("positions", None)
+                    add_params_per_sensor_polyline[i_sensor] = v1.__dict__
+                else:
+                    add_params_per_sensor[i_sensor][k] = v1
+        else:
+            for i_sensor in range(ddm_LLA.shape[0]):
+                add_params_per_sensor[i_sensor][k] = v
+
+    # convert to radians
+    rrm_LLA = DDM2RRM(ddm_LLA)
+    rad_az_broadside = np.deg2rad(deg_az_broadside)
+    rad_el_broadside = np.deg2rad(deg_el_broadside)
+    rad_az_FOV = np.deg2rad(deg_az_FOV)
+    rad_el_FOV = np.deg2rad(deg_el_FOV)
+
+    out: list[Packet] = []
+    for i_sensor in range(rrm_LLA.shape[0]):
+        # lines to inner radii
+        if m_distance_min[i_sensor] != 0 and show_minimum_range_polyline:
+            ddm_LLA00 = RRM2DDM(
+                ECEF2geodetic(
+                    ENU2ECEF(
+                        rrm_LLA[i_sensor],
+                        AER2ENU(
+                            np.array(
+                                [
+                                    [
+                                        rad_az_broadside[i_sensor]
+                                        - rad_az_FOV[i_sensor] / 2
+                                    ],
+                                    [
+                                        rad_el_broadside[i_sensor]
+                                        - rad_el_FOV[i_sensor] / 2
+                                    ],
+                                    [m_distance_min[i_sensor]],
+                                ]
+                            )
+                        ),
+                        WGS84.a,
+                        WGS84.b,
+                    ),
+                    WGS84.a,
+                    WGS84.b,
+                )
+            )
+            ddm_LLA01 = RRM2DDM(
+                ECEF2geodetic(
+                    ENU2ECEF(
+                        rrm_LLA[i_sensor],
+                        AER2ENU(
+                            np.array(
+                                [
+                                    [
+                                        rad_az_broadside[i_sensor]
+                                        + rad_az_FOV[i_sensor] / 2
+                                    ],
+                                    [
+                                        rad_el_broadside[i_sensor]
+                                        - rad_el_FOV[i_sensor] / 2
+                                    ],
+                                    [m_distance_min[i_sensor]],
+                                ]
+                            )
+                        ),
+                        WGS84.a,
+                        WGS84.b,
+                    ),
+                    WGS84.a,
+                    WGS84.b,
+                )
+            )
+            ddm_LLA11 = RRM2DDM(
+                ECEF2geodetic(
+                    ENU2ECEF(
+                        rrm_LLA[i_sensor],
+                        AER2ENU(
+                            np.array(
+                                [
+                                    [
+                                        rad_az_broadside[i_sensor]
+                                        + rad_az_FOV[i_sensor] / 2
+                                    ],
+                                    [
+                                        rad_el_broadside[i_sensor]
+                                        + rad_el_FOV[i_sensor] / 2
+                                    ],
+                                    [m_distance_min[i_sensor]],
+                                ]
+                            )
+                        ),
+                        WGS84.a,
+                        WGS84.b,
+                    ),
+                    WGS84.a,
+                    WGS84.b,
+                )
+            )
+            ddm_LLA10 = RRM2DDM(
+                ECEF2geodetic(
+                    ENU2ECEF(
+                        rrm_LLA[i_sensor],
+                        AER2ENU(
+                            np.array(
+                                [
+                                    [
+                                        rad_az_broadside[i_sensor]
+                                        - rad_az_FOV[i_sensor] / 2
+                                    ],
+                                    [
+                                        rad_el_broadside[i_sensor]
+                                        + rad_el_FOV[i_sensor] / 2
+                                    ],
+                                    [m_distance_min[i_sensor]],
+                                ]
+                            )
+                        ),
+                        WGS84.a,
+                        WGS84.b,
+                    ),
+                    WGS84.a,
+                    WGS84.b,
+                )
+            )
+            out.append(
+                Packet(
+                    id=f"sensor{i_sensor}line00-{str(uuid4())}",
+                    polyline=Polyline(
+                        positions=PositionList(
+                            cartographicDegrees=[
+                                ddm_LLA[i_sensor, 1, 0],
+                                ddm_LLA[i_sensor, 0, 0],
+                                ddm_LLA[i_sensor, 2, 0],
+                                ddm_LLA00[1, 0],
+                                ddm_LLA00[0, 0],
+                                ddm_LLA00[2, 0],
+                            ]
+                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
+                    ),
+                    **add_params_per_sensor[i_sensor],
+                )
+            )
+            out.append(
+                Packet(
+                    id=f"sensor{i_sensor}line01-{str(uuid4())}",
+                    polyline=Polyline(
+                        positions=PositionList(
+                            cartographicDegrees=[
+                                ddm_LLA[i_sensor, 1, 0],
+                                ddm_LLA[i_sensor, 0, 0],
+                                ddm_LLA[i_sensor, 2, 0],
+                                ddm_LLA01[1, 0],
+                                ddm_LLA01[0, 0],
+                                ddm_LLA01[2, 0],
+                            ]
+                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
+                    ),
+                    **add_params_per_sensor[i_sensor],
+                )
+            )
+            out.append(
+                Packet(
+                    id=f"sensor{i_sensor}line11-{str(uuid4())}",
+                    polyline=Polyline(
+                        positions=PositionList(
+                            cartographicDegrees=[
+                                ddm_LLA[i_sensor, 1, 0],
+                                ddm_LLA[i_sensor, 0, 0],
+                                ddm_LLA[i_sensor, 2, 0],
+                                ddm_LLA11[1, 0],
+                                ddm_LLA11[0, 0],
+                                ddm_LLA11[2, 0],
+                            ]
+                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
+                    ),
+                    **add_params_per_sensor[i_sensor],
+                )
+            )
+            out.append(
+                Packet(
+                    id=f"sensor{i_sensor}line10-{str(uuid4())}",
+                    polyline=Polyline(
+                        positions=PositionList(
+                            cartographicDegrees=[
+                                ddm_LLA[i_sensor, 1, 0],
+                                ddm_LLA[i_sensor, 0, 0],
+                                ddm_LLA[i_sensor, 2, 0],
+                                ddm_LLA10[1, 0],
+                                ddm_LLA10[0, 0],
+                                ddm_LLA10[2, 0],
+                            ]
+                        ),
+                        **add_params_per_sensor_polyline[i_sensor],
+                    ),
+                    **add_params_per_sensor[i_sensor],
+                )
+            )
+
+        # ellipsoid
+        out.append(
+            Packet(
+                id=str(uuid4()),
+                position=Position(
+                    cartographicDegrees=[
+                        float(ddm_LLA[i_sensor, 1, 0]),
+                        float(ddm_LLA[i_sensor, 0, 0]),
+                        float(ddm_LLA[i_sensor, 2, 0]),
+                    ]
+                ),
+                ellipsoid=Ellipsoid(
+                    minimumClock=np.deg2rad(
+                        90 - deg_az_broadside[i_sensor] - deg_az_FOV[i_sensor] / 2
+                    ),  # east -> north
+                    maximumClock=np.deg2rad(
+                        90 - deg_az_broadside[i_sensor] + deg_az_FOV[i_sensor] / 2
+                    ),  # east -> north
+                    minimumCone=np.deg2rad(
+                        90 - deg_el_broadside[i_sensor] - deg_el_FOV[i_sensor] / 2
+                    ),  # up -> down
+                    maximumCone=np.deg2rad(
+                        90 - deg_el_broadside[i_sensor] + deg_el_FOV[i_sensor] / 2
+                    ),  # up -> down
+                    radii=EllipsoidRadii(
+                        cartesian=[
+                            float(m_distance_max[i_sensor]),
+                            float(m_distance_max[i_sensor]),
+                            float(m_distance_max[i_sensor]),
+                        ]
+                    ),
+                    innerRadii=EllipsoidRadii(
+                        cartesian=[
+                            max(float(m_distance_min[i_sensor]), 0.1),
+                            max(float(m_distance_min[i_sensor]), 0.1),
+                            max(float(m_distance_min[i_sensor]), 0.1),
+                        ]
+                    ),
+                    **add_params_per_sensor_ellipsoid[i_sensor],
+                ),
+                **add_params_per_sensor[i_sensor],
+            )
+        )
+
+    return out
 
 
 def sensor_polyline(
