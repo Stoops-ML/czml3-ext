@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
@@ -157,6 +158,7 @@ legacy_tox_ini = """
         3.10: py310
         3.11: py311, quality
         3.12: py312
+        3.13: py313
 
     [testenv]
     basepython =
@@ -164,6 +166,7 @@ legacy_tox_ini = """
         py310: {env:PYTHON:python3.10}
         py311: {env:PYTHON:python3.11}
         py312: {env:PYTHON:python3.12}
+        py313: {env:PYTHON:python3.13}
         {quality}: {env:PYTHON:python3}
     setenv =
         PYTHONUNBUFFERED = yes
