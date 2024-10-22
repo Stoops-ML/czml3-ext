@@ -1,7 +1,7 @@
 import base64
 from importlib import resources as impresources
 from pathlib import Path
-from typing import Union
+from typing import Literal, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -80,18 +80,44 @@ def get_contours(
     find_contours_level: float = 0.5,
     pc_poly_certainty_required: float = 0.9,
     error_on_uncertainty: bool = True,
+    uncertain_route: Literal["coverage", "holes"] = "holes",
 ) -> tuple[list[npt.NDArray[np.floating[TNP]]], list[npt.NDArray[np.floating[TNP]]]]:
     """Get the contours of areas of coverage and holes from an array.
 
-    :param npt.NDArray[Any] arr: Coverage array of boolean values
-    :param float deg_origin_x: x origin of array
-    :param float deg_size_x: Size of delta x of array
-    :param float deg_origin_y: y origin of array
-    :param float deg_size_y: size of delta y of array
-    :param float find_contours_level: level of finding contours, defaults to 0.5
-    :param float pc_poly_certainty_required: percentage required to determine that polygon is a hole or coverage, defaults to 0.9
-    :param bool error_on_uncertainty: raise error if identification of polygon is below pc_poly_certainty_required threshold, defaults to True
-    :raises ValueError: below pc_poly_certainty_required threshold, defaults to True
+    Parameters
+    ----------
+    arr : npt.NDArray[np.bool_]
+        Coverage array of boolean values
+    deg_origin_x : float
+        X origin of array
+    deg_size_x : float
+        Size of delta x of array
+    deg_origin_y : float
+        Y origin of array
+    deg_size_y : float
+        Size of delta y of array
+    find_contours_level : float, optional
+        Level of finding contours, by default 0.5
+    pc_poly_certainty_required : float, optional
+        Percentage required to determine that polygon is a hole or coverage, by default 0.9
+    error_on_uncertainty : bool, optional
+        Raise error if identification of polygon is below pc_poly_certainty_required threshold, by default True
+    uncertain_route : Literal["coverage", "holes"], optional
+        If error_on_uncertainty is False then polygon will be added to either coverage or holes list, by default "holes"
+
+    Returns
+    -------
+    tuple[list[npt.NDArray[np.floating[TNP]]], list[npt.NDArray[np.floating[TNP]]]]
+        A tuple where the first variable is a list of coverage polygons and the second variable is a list of hole polygons
+
+    Raises
+    ------
+    TypeError
+        _description_
+    ValueError
+        _description_
+    ValueError
+        _description_
     """
     # checks
     if not np.issubdtype(arr.dtype, np.bool_):
@@ -114,9 +140,11 @@ def get_contours(
         pc_certainty_coverage = np.sum(arr[rr, cc]) / arr[rr, cc].size
         if pc_certainty_coverage >= pc_poly_certainty_required:
             dd_LL_coverages.append(dd_LL_contour)
-        elif (
-            1 - pc_certainty_coverage
-        ) >= pc_poly_certainty_required or not error_on_uncertainty:
+        elif (1 - pc_certainty_coverage) >= pc_poly_certainty_required:
+            dd_LL_holes.append(dd_LL_contour)
+        elif not error_on_uncertainty and uncertain_route == "coverage":
+            dd_LL_coverages.append(dd_LL_contour)
+        elif not error_on_uncertainty and uncertain_route == "holes":
             dd_LL_holes.append(dd_LL_contour)
         else:
             raise ValueError(
