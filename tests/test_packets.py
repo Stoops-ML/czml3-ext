@@ -5,14 +5,14 @@ import pytest
 from czml3 import Document, Preamble
 from czml3.properties import Color, Material, Polygon, SolidColorMaterial
 
-from czml3_ext.packets import grid, sensor_polyline
+from czml3_ext.packets import grid, sensor
 
 from . import saved_czmls
 
 
 @pytest.mark.xfail(reason="Make a better test")
 def test_1sensor():
-    sensor1 = sensor_polyline(
+    sensor1 = sensor(
         np.array([[[33.0], [33], [0]]]),
         10,
         10,
