@@ -150,7 +150,7 @@ ignore_missing_imports = true
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = quality, py{310,311,312}
+    envlist = quality, py{310,311,312,313}
 
     [gh-actions]
     python =
