@@ -5,12 +5,12 @@
 
 This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [CZML3](https://github.com/poliastro/czml3) for more information about CZML properties.
 
-| Item     | Function in `czml3_ext.packets`        |
-| -------- | -------------------------------------- |
-| Sensor   | `sensor_polyline` and `sensor_polygon` |
-| Grid     | `grid`                                 |
-| Border   | `border`                               |
-| Coverage | `coverage`                             |
+| Item     | Function in `czml3_ext.packets` |
+| -------- | ------------------------------- |
+| Sensor   | `sensor`                        |
+| Grid     | `grid`                          |
+| Border   | `border`                        |
+| Coverage | `coverage`                      |
 
 ## Installation
 `pip install czml3-ext`
@@ -30,24 +30,25 @@ from czml3_ext.colours import RGBA
 blue = RGBA.blue.copy()
 blue[-1] = 100
 
-sensor_polyline = packets.sensor_polyline(
-    np.array([[31.8], [34.68], [0]]), 90, 30, 50, 20, 20_000, 5_000
-)
-sensor_polygon = packets.sensor_polygon(
-    np.array([[31.8], [34.68], [0]]),
-    90,
+sensor = packets.sensor(
+    np.array([[31.4], [34.7], [1000]]),
+    10,
     30,
-    50,
+    100,
     20,
-    20_000,
+    10_000,
     5_000,
-    polygon=Polygon(
-        positions=[],
+    name="A Sensor",
+    ellipsoid=Ellipsoid(
+        radii=[],
         material=Material(solidColor=SolidColorMaterial(color=Color(rgba=blue))),
+        outlineColor=Color(rgba=RGBA.white),
+        fill=True,
+        outline=True,
     ),
 )
 
-doc = Document([Preamble(name="simple")] + sensor_polygon + sensor_polyline)
+doc = Document([Preamble(name="simple")] + sensor)
 with open("example.czml", "w") as f:
     doc.dump(f)
 ```
