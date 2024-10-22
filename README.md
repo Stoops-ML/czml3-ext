@@ -22,7 +22,7 @@ The following code produces a CZML file with a single sensor:
 ```
 import numpy as np
 from czml3 import Document, Preamble
-from czml3.properties import Color, Material, Polygon, SolidColorMaterial
+from czml3.properties import Color, Material, Polygon, SolidColorMaterial, Ellipsoid
 
 from czml3_ext import packets
 from czml3_ext.colours import RGBA
@@ -54,7 +54,8 @@ with open("example.czml", "w") as f:
 ```
 
 This produces the following view:
-![Example](https://github.com/user-attachments/assets/3127699f-5235-4acd-b218-c6e43f6595d4)
+![Example](https://github.com/user-attachments/assets/c48709fe-652e-480b-a69a-ffccbe7b5ec1)
+
 
 
 
