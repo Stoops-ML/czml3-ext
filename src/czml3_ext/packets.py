@@ -264,6 +264,15 @@ def sensor(
                 if isinstance(v1, Polyline):
                     v1.__dict__.pop("positions", None)
                     add_params_per_sensor_polyline[i_sensor] = v1.__dict__
+                if isinstance(v1, Ellipsoid):
+                    v1.__dict__.pop("minimumClock", None)
+                    v1.__dict__.pop("maximumClock", None)
+                    v1.__dict__.pop("minimumCone", None)
+                    v1.__dict__.pop("maximumCone", None)
+                    v1.__dict__.pop("radii", None)
+                    v1.__dict__.pop("innerRadii", None)
+                    v1.__dict__.pop("outline", None)
+                    add_params_per_sensor_ellipsoid[i_sensor] = v1.__dict__
                 else:
                     add_params_per_sensor[i_sensor][k] = v1
         else:
