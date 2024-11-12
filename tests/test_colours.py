@@ -1,31 +1,32 @@
+import pytest
+
 from czml3_ext.colours import (
     RGBA,
-    create_palette,
-    RGBA_white,
-    RGBA_red,
+    RGBA_black,
     RGBA_blue,
     RGBA_green,
-    RGBA_yellow,
     RGBA_grey,
-    RGBA_black,
-    RGBA_pink,
     RGBA_orange,
+    RGBA_pink,
     RGBA_purple,
+    RGBA_red,
+    RGBA_white,
+    RGBA_yellow,
+    create_palette,
 )
-import pytest
 
 
 def test_values():
-    RGBA_white == RGBA(255.0, 255.0, 255.0, 250.0)
-    RGBA_red == RGBA(255.0, 0.0, 0.0, 250.0)
-    RGBA_blue == RGBA(0.0, 0.0, 255.0, 250.0)
-    RGBA_green == RGBA(0.0, 255.0, 0.0, 250.0)
-    RGBA_yellow == RGBA(255.0, 255.0, 0.0, 250.0)
-    RGBA_grey == RGBA(128.0, 128.0, 128.0, 250.0)
-    RGBA_black == RGBA(0.0, 0.0, 0.0, 255.0)
-    RGBA_pink == RGBA(255.0, 0.0, 255.0, 255.0)
-    RGBA_orange == RGBA(255.0, 128.0, 0.0, 255.0)
-    RGBA_purple == RGBA(127.0, 0.0, 255.0, 255.0)
+    assert RGBA_white == RGBA(255.0, 255.0, 255.0, 250.0)
+    assert RGBA_red == RGBA(255.0, 0.0, 0.0, 250.0)
+    assert RGBA_blue == RGBA(0.0, 0.0, 255.0, 250.0)
+    assert RGBA_green == RGBA(0.0, 255.0, 0.0, 250.0)
+    assert RGBA_yellow == RGBA(255.0, 255.0, 0.0, 250.0)
+    assert RGBA_grey == RGBA(128.0, 128.0, 128.0, 250.0)
+    assert RGBA_black == RGBA(0.0, 0.0, 0.0, 255.0)
+    assert RGBA_pink == RGBA(255.0, 0.0, 255.0, 255.0)
+    assert RGBA_orange == RGBA(255.0, 128.0, 0.0, 255.0)
+    assert RGBA_purple == RGBA(127.0, 0.0, 255.0, 255.0)
 
 
 @pytest.mark.parametrize(
@@ -118,7 +119,7 @@ def test_errors_of_RGBA_copy(c: RGBA):
 
 
 def test_create_palette():
-    create_palette([RGBA_black, RGBA_white], 10) == [
+    assert create_palette([RGBA_black, RGBA_white], 10) == [
         [0.0, 0.0, 0.0, 255.0],
         [
             28.333333333333332,
