@@ -24,7 +24,7 @@ class RGBA(list[Union[float, int]]):
     def __add__(self, item):
         raise TypeError("Extending not allowed: RGBA must have four values.")
 
-    def __setitem__(self, index: SupportsIndex, item: Any) -> None:
+    def __setitem__(self, index, item: Any) -> None:
         if not self._modify:
             raise TypeError(
                 "Modify flag is disabled. Please use c.copy() to allow modifications."
