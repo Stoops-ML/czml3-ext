@@ -1,12 +1,12 @@
 from collections.abc import Sequence
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 
 
-class RGBA(list[Union[float, int]]):
+class RGBA(list[float]):
     def __init__(self, *args):
-        if not all(isinstance(x, (float, int)) for x in args):
+        if not all(isinstance(x, float) for x in args):
             raise ValueError("All elements must be floats")
         if not all(x <= 255 and x >= 0 for x in args):
             raise ValueError("All elements must be between 0 and 255")
@@ -29,22 +29,22 @@ class RGBA(list[Union[float, int]]):
             raise TypeError(
                 "Modify flag is disabled. Please use c.copy() to allow modifications."
             )
-        if not isinstance(item, (float, int)):
-            raise ValueError("Only Union[float, int] values can be assigned")
+        if not isinstance(item, float):
+            raise ValueError("Only float values can be assigned")
         if item > 255 or item < 0:
             raise ValueError("Alpha value must be between 0 and 255")
         super().__setitem__(index, item)
 
-    def get_with_temp_alpha(self, alpha: Union[float, int]) -> list[Union[float, int]]:
-        if not isinstance(alpha, (float, int)):
-            raise ValueError("Alpha value must be float")
+    def get_with_temp_alpha(self, alpha: float | int) -> list[float]:
+        if not isinstance(alpha, float | int):
+            raise TypeError("Alpha value must be float or int")
         if alpha > 255 or alpha < 0:
             raise ValueError("Alpha value must be between 0 and 255")
         tmp = self.copy()
-        tmp[3] = alpha
+        tmp[3] = float(alpha)
         return tmp
 
-    def copy(self) -> list[Union[int, float]]:
+    def copy(self) -> list[float]:
         new = RGBA(
             super().__getitem__(0),
             super().__getitem__(1),

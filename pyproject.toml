@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Create packets of CZML3"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
@@ -18,7 +18,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -31,7 +30,7 @@ dependencies = [
     "numpy>=1.0.0,<3.0.0",
     "shapely>=2.0.5",
     "scikit-image>=0.24.0",
-    "czml3>=1.0.2",
+    "czml3>=2.0.1",
     "transforms84>=0.3.2",
 ]
 dynamic = ["version"]
@@ -110,11 +109,7 @@ extend-include = ["*.ipynb"]
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-ignore = [
-    "UP007",
-    "E501",
-    "F821"  # to support Python 3.9
-]
+ignore = ["E501"]
 select = ["E", "F", "UP", "B", "SIM", "I"]
 
 
@@ -154,7 +149,6 @@ legacy_tox_ini = """
 
     [gh-actions]
     python =
-        3.9: py39
         3.10: py310
         3.11: py311, quality
         3.12: py312
@@ -162,7 +156,6 @@ legacy_tox_ini = """
 
     [testenv]
     basepython =
-        py39: {env:PYTHON:python3.9}
         py310: {env:PYTHON:python3.10}
         py311: {env:PYTHON:python3.11}
         py312: {env:PYTHON:python3.12}

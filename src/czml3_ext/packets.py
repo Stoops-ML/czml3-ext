@@ -1,6 +1,5 @@
 from collections.abc import Sequence
-from typing import Any, Optional, Union
-from uuid import uuid4
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -30,64 +29,49 @@ from .shapely_helpers import linear_ring2LLA, poly2LLA
 
 
 def sensor(
-    ddm_LLA: Union[
-        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
-        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
-    ],
-    deg_az_broadside: Union[
-        int,
-        float,
-        np.floating[TNP],
-        np.integer[TNP],
-        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
-        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
-    ],
-    deg_el_broadside: Union[
-        int,
-        float,
-        np.floating[TNP],
-        np.integer[TNP],
-        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
-        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
-    ],
-    deg_az_FOV: Union[
-        int,
-        float,
-        np.floating[TNP],
-        np.integer[TNP],
-        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
-        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
-    ],
-    deg_el_FOV: Union[
-        int,
-        float,
-        np.floating[TNP],
-        np.integer[TNP],
-        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
-        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
-    ],
-    m_distance_max: Union[
-        int,
-        float,
-        np.floating[TNP],
-        np.integer[TNP],
-        Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]],
-        npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]],
-    ],
-    m_distance_min: Optional[
-        Union[
-            int,
-            float,
-            np.floating[TNP],
-            np.integer[TNP],
-            Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
-            npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
-        ]
-    ] = None,
+    ddm_LLA: Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
+    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    deg_az_broadside: int
+    | float
+    | np.floating[TNP]
+    | np.integer[TNP]
+    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
+    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    deg_el_broadside: int
+    | float
+    | np.floating[TNP]
+    | np.integer[TNP]
+    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
+    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    deg_az_FOV: int
+    | float
+    | np.floating[TNP]
+    | np.integer[TNP]
+    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
+    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    deg_el_FOV: int
+    | float
+    | np.floating[TNP]
+    | np.integer[TNP]
+    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
+    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    m_distance_max: int
+    | float
+    | np.floating[TNP]
+    | np.integer[TNP]
+    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
+    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    m_distance_min: int
+    | float
+    | np.floating[TNP]
+    | np.integer[TNP]
+    | Sequence[int | float | np.floating[TNP] | np.integer[TNP]]
+    | npt.NDArray[np.integer[TNP] | np.floating[TNP]]
+    | None = None,
     *,
-    subdivisions: Union[int, Sequence[int]] = 64,
+    subdivisions: int | Sequence[int] = 64,
     show_minimum_range_polyline: bool = True,
-    max_ellipsoid_angle: Union[float, int] = 100.0,
+    max_ellipsoid_angle: float | int = 100.0,
     **update_packets,
 ) -> list[Packet]:
     """Create a sensor.
@@ -111,25 +95,25 @@ def sensor(
 
     Parameters
     ----------
-    ddm_LLA : Union[ Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+    ddm_LLA : Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
         Location of sensor(s) in LLA [deg, deg, m] of shape (3, 1) for one sensor of (n, 3, 1) for n sensors
-    deg_az_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+    deg_az_broadside : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
         Azimuth of sensor(s) [deg]
-    deg_el_broadside : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+    deg_el_broadside : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
         Elevation of sensor(s) [deg]
-    deg_az_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+    deg_az_FOV : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
         Azimuth FOV of sensor(s) [deg]
-    deg_el_FOV : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+    deg_el_FOV : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
         Elevation FOV of sensor(s) [deg]
-    m_distance_max : Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.integer[TNP], np.floating[TNP]]], npt.NDArray[Union[np.floating[TNP], np.integer[TNP]]], ]
+    m_distance_max : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
         Maximum range of sensor(s) [m]
-    m_distance_min : Optional[ Union[ int, float, np.floating[TNP], np.integer[TNP], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], ] ], optional
+    m_distance_min : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.floating[TNP] | np.integer[TNP]] | npt.NDArray[np.integer[TNP] | np.floating[TNP]] | None
         Minimum range of sensor(s) [m], by default None
-    subdivisions : Union[int, Sequence[int]]
+    subdivisions : int, Sequence[int]
         The number of samples per azimuth and elevation arc, determining the granularity of the curvature, by default 64
     show_minimum_range_polyline : bool
         Show the minimum range polylines, by default True
-    max_ellipsoid_angle : Union[float, int]
+    max_ellipsoid_angle : float, int
         The maximum angle to create an ellipsoid - any number greater than this will create a polyline for the azimuth and elevation arcs, by default 100.0
 
     Returns
@@ -396,7 +380,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -415,7 +398,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -434,7 +416,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -453,7 +434,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -516,7 +496,6 @@ def sensor(
                         )
                     out.append(
                         Packet(
-                            id=str(uuid4()),
                             polyline=Polyline(
                                 positions=PositionList(cartographicDegrees=ddm_LLA_arc),
                                 **add_params_per_sensor_polyline[i_sensor],
@@ -563,7 +542,6 @@ def sensor(
                         )
                     out.append(
                         Packet(
-                            id=str(uuid4()),
                             polyline=Polyline(
                                 positions=PositionList(cartographicDegrees=ddm_LLA_arc),
                                 **add_params_per_sensor_polyline[i_sensor],
@@ -680,7 +658,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -699,7 +676,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -718,7 +694,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -737,7 +712,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -763,7 +737,6 @@ def sensor(
         ) or max_ellipsoid_angle > deg_az_FOV[i_sensor]:
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     position=Position(
                         cartographicDegrees=[
                             float(ddm_LLA[i_sensor, 1, 0]),
@@ -809,18 +782,14 @@ def sensor(
 
 
 def grid(
-    ddm_LLA: Union[
-        npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]],
-        Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
-    ],
+    ddm_LLA: npt.NDArray[np.integer[TNP] | np.floating[TNP]]
+    | Sequence[int | float | np.floating[TNP] | np.integer[TNP]],
     deg_zero_tolerance_lat: float = 10e-5,
     deg_zero_tolerance_long: float = 10e-5,
     *,
-    ddm_LLA_cut: Union[
-        None,
-        npt.NDArray[np.floating[TNP]],
-        Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]],
-    ] = None,
+    ddm_LLA_cut: None
+    | npt.NDArray[np.floating[TNP]]
+    | Sequence[int | float | np.floating[TNP] | np.integer[TNP]] = None,
     **update_packets,
 ) -> list[Packet]:
     """Make a grid in CZML.
@@ -840,13 +809,13 @@ def grid(
 
     Parameters
     ----------
-    ddm_LLA : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
+    ddm_LLA : npt.NDArray[np.integer[TNP] | np.floating[TNP]] | Sequence[int | float | np.floating[TNP] | np.integer[TNP]]
         3D numpy array or sequence containing lat [deg], long [deg], alt [m] points
     deg_zero_tolerance_lat : float
         Tolerance of 0 degrees for latittude
     deg_zero_tolerance_long : float
         Tolerance of 0 degrees for longitude
-    ddm_LLA_cut : Union[ npt.NDArray[Union[np.integer[TNP], np.floating[TNP]]], Sequence[Union[int, float, np.floating[TNP], np.integer[TNP]]], ]
+    ddm_LLA_cut : None | npt.NDArray[np.floating[TNP]] | Sequence[int | float | np.floating[TNP] | np.integer[TNP]]
         3D numpy array or sequence containing lat [deg], long [deg], alt [m] points that will cut the polygons.
 
     Returns
@@ -965,7 +934,6 @@ def grid(
                     ddm_LLA_polygon = np_ddm_LLA_polygon.ravel().tolist()
                     out.append(
                         Packet(
-                            id=str(uuid4()),
                             polygon=Polygon(
                                 positions=PositionList(
                                     cartographicDegrees=ddm_LLA_polygon
@@ -978,7 +946,6 @@ def grid(
         else:
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polygon=Polygon(
                         positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
                         **add_params_per_square_polygon[i_centre],
@@ -990,12 +957,10 @@ def grid(
 
 
 def border(
-    borders: Union[
-        str,
-        npt.NDArray[np.floating[TNP]],
-        Sequence[Union[str, npt.NDArray[np.floating[TNP]]]],
-    ],
-    step: Union[int, Sequence[int]] = 1,
+    borders: str
+    | npt.NDArray[np.floating[TNP]]
+    | Sequence[str | npt.NDArray[np.floating[TNP]]],
+    step: int | Sequence[int] = 1,
     **update_packets,
 ) -> list[Packet]:
     """Create a CZML3 packet of a border.
@@ -1008,9 +973,9 @@ def border(
 
     Parameters
     ----------
-    borders : Union[ str, npt.NDArray[np.floating[TNP]], Sequence[Union[str, npt.NDArray[np.floating[TNP]]]], ]
+    borders : str | npt.NDArray[np.floating[TNP]] | Sequence[str | npt.NDArray[np.floating[TNP]]]
         The border(s) packets requested
-    step : Union[int, Sequence[int]], optional
+    step : int, Sequence[int], optional
         Step of border points, by default 1
 
     Returns
@@ -1023,7 +988,7 @@ def border(
     TypeError
         _description_
     """
-    if isinstance(borders, (str, np.ndarray)):
+    if isinstance(borders, str | np.ndarray):
         borders = [borders]
     if isinstance(step, int):
         step = [step for _ in range(len(borders))]
@@ -1063,7 +1028,6 @@ def border(
 
         out.append(
             Packet(
-                id=f"border-{str(uuid4())}",
                 polyline=Polyline(
                     positions=PositionList(
                         cartographicDegrees=ddm_LLA_border[:: step[i_border], [1, 0, 2]]
@@ -1079,12 +1043,11 @@ def border(
 
 
 def coverage(
-    dd_LL_coverages: Union[
-        Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]
-    ],
-    dd_LL_holes: Optional[
-        Union[Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]]
-    ] = None,
+    dd_LL_coverages: Sequence[npt.NDArray[np.floating[TNP]]]
+    | npt.NDArray[np.floating[TNP]],
+    dd_LL_holes: Sequence[npt.NDArray[np.floating[TNP]]]
+    | npt.NDArray[np.floating[TNP]]
+    | None = None,
     **update_packets,
 ) -> list[Packet]:
     """Create czml3 packets of coverage (including holes).
@@ -1099,9 +1062,9 @@ def coverage(
 
     Parameters
     ----------
-    dd_LL_coverages : Union[ Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]] ]
+    dd_LL_coverages : Sequence[npt.NDArray[np.floating[TNP]]] | npt.NDArray[np.floating[TNP]]
         Contours of coverages
-    dd_LL_holes : Optional[ Union[Sequence[npt.NDArray[np.floating[TNP]]], npt.NDArray[np.floating[TNP]]] ], optional
+    dd_LL_holes : Sequence[npt.NDArray[np.floating[TNP]]] | npt.NDArray[np.floating[TNP]] | None, optional
         Contours of holes, by default None
 
     Returns
@@ -1151,7 +1114,6 @@ def coverage(
         ]
         out.append(
             Packet(
-                id=f"coverage-{str(uuid4())}",
                 polygon=Polygon(
                     positions=PositionList(
                         cartographicDegrees=ddm_polygon[:, [1, 0, 2]].ravel().tolist()

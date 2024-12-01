@@ -1,7 +1,7 @@
 import base64
 from importlib import resources as impresources
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -18,7 +18,7 @@ from .definitions import TNP
 from .errors import BillboardNotFound, BorderNotFound
 
 
-def get_billboard(file_name: Union[str, Path]) -> str:
+def get_billboard(file_name: str | Path) -> str:
     """
     :param file_name: name of billboard to retrieve
     :return: string of base64 encoded png billboard
@@ -37,7 +37,7 @@ def get_billboard(file_name: Union[str, Path]) -> str:
         ) from None
 
 
-def get_border(file_name: Union[str, Path]) -> npt.NDArray[np.float64]:
+def get_border(file_name: str | Path) -> npt.NDArray[np.float64]:
     """
     :param file_name: name of border file
     :return: string of czml file
@@ -59,7 +59,7 @@ def get_border(file_name: Union[str, Path]) -> npt.NDArray[np.float64]:
         ) from None
 
 
-def png2base64(file_path: Union[str, Path]) -> str:
+def png2base64(file_path: str | Path) -> str:
     """
     Convert png image to billboard string for czml
     :param file_path:
@@ -133,7 +133,7 @@ def get_contours(
     # get holes and coverage polygons
     dd_LL_coverages: list[npt.NDArray[np.floating[TNP]]] = []
     dd_LL_holes: list[npt.NDArray[np.floating[TNP]]] = []
-    for contour, dd_LL_contour in zip(contours, dd_LL_contours):
+    for contour, dd_LL_contour in zip(contours, dd_LL_contours, strict=False):
         rr, cc = draw.polygon(contour[:, 0], contour[:, 1])
         if rr.size == 0 or cc.size == 0:
             raise ValueError("Contour has no size")

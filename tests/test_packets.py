@@ -20,7 +20,7 @@ def test_1sensor():
         20,
         10_000,
     )
-    result = Document([Preamble(name="simple")] + sensor1).dumps()
+    result = Document(packets=[Preamble(name="simple")] + sensor1).dumps()
     with (impresources.files(saved_czmls) / "sensor_ddm.czml").open("r") as f:
         expected_str = f.read().strip()
     assert result == expected_str
@@ -58,7 +58,7 @@ def test_grid():
             for c in colours
         ],
     )
-    result = Document([Preamble(name="simple")] + grid1).dumps()
+    result = Document(packets=[Preamble(name="simple")] + grid1).dumps()
     with (impresources.files(saved_czmls) / "grid_DDM.czml").open("r") as f:
         expected_str = f.read().strip()
     assert result == expected_str
