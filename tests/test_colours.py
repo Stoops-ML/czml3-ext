@@ -68,7 +68,7 @@ def test_get_with_temp_alpha(c: RGBA):
     ],
 )
 def test_copy(c: RGBA):
-    alpha = 10
+    alpha = 10.0
     with pytest.raises(TypeError):
         c[3] = alpha
     new = c.copy()
@@ -85,11 +85,11 @@ def test_errors_of_RGBA():
         RGBA(1, 1, 1, 1, 1)  # too many values
     with pytest.raises(ValueError):
         RGBA("1", 1, 1, 1)  # wrong type
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         RGBA(1, 1, 1, 1) + RGBA(1, 1, 1, 1)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         RGBA(1, 1, 1, 1).append(RGBA(1, 1, 1, 1))
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         RGBA(1, 1, 1, 1).extend(RGBA(1, 1, 1, 1))
 
 
@@ -113,7 +113,7 @@ def test_errors_of_RGBA_copy(c: RGBA):
     with pytest.raises(ValueError):
         new[0] = -1  # outside of bounds
     with pytest.raises(IndexError):
-        new[4] = 1  # index doesn't exist
+        new[4] = 1.0  # index doesn't exist
     with pytest.raises(ValueError):  # wrong type
         new[0] = "1"  # type: ignore[call-overload]
 
