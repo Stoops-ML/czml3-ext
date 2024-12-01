@@ -381,7 +381,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -400,7 +399,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -419,7 +417,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -438,7 +435,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -501,7 +497,6 @@ def sensor(
                         )
                     out.append(
                         Packet(
-                            id=str(uuid4()),
                             polyline=Polyline(
                                 positions=PositionList(cartographicDegrees=ddm_LLA_arc),
                                 **add_params_per_sensor_polyline[i_sensor],
@@ -548,7 +543,6 @@ def sensor(
                         )
                     out.append(
                         Packet(
-                            id=str(uuid4()),
                             polyline=Polyline(
                                 positions=PositionList(cartographicDegrees=ddm_LLA_arc),
                                 **add_params_per_sensor_polyline[i_sensor],
@@ -665,7 +659,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -684,7 +677,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -703,7 +695,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -722,7 +713,6 @@ def sensor(
             )
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polyline=Polyline(
                         positions=PositionList(
                             cartographicDegrees=[
@@ -748,7 +738,6 @@ def sensor(
         ) or max_ellipsoid_angle > deg_az_FOV[i_sensor]:
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     position=Position(
                         cartographicDegrees=[
                             float(ddm_LLA[i_sensor, 1, 0]),
@@ -946,7 +935,6 @@ def grid(
                     ddm_LLA_polygon = np_ddm_LLA_polygon.ravel().tolist()
                     out.append(
                         Packet(
-                            id=str(uuid4()),
                             polygon=Polygon(
                                 positions=PositionList(
                                     cartographicDegrees=ddm_LLA_polygon
@@ -959,7 +947,6 @@ def grid(
         else:
             out.append(
                 Packet(
-                    id=str(uuid4()),
                     polygon=Polygon(
                         positions=PositionList(cartographicDegrees=ddm_LLA_polygon),
                         **add_params_per_square_polygon[i_centre],
@@ -1042,7 +1029,6 @@ def border(
 
         out.append(
             Packet(
-                id=f"border-{str(uuid4())}",
                 polyline=Polyline(
                     positions=PositionList(
                         cartographicDegrees=ddm_LLA_border[:: step[i_border], [1, 0, 2]]
@@ -1129,7 +1115,6 @@ def coverage(
         ]
         out.append(
             Packet(
-                id=f"coverage-{str(uuid4())}",
                 polygon=Polygon(
                     positions=PositionList(
                         cartographicDegrees=ddm_polygon[:, [1, 0, 2]].ravel().tolist()
