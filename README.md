@@ -22,13 +22,16 @@ The following code produces a CZML file with a single sensor:
 ```
 import numpy as np
 from czml3 import Document, Preamble
-from czml3.properties import Color, Material, Polygon, SolidColorMaterial, Ellipsoid
+from czml3.properties import (
+    Color,
+    Ellipsoid,
+    EllipsoidRadii,
+    Material,
+    SolidColorMaterial,
+)
 
 from czml3_ext import packets
-from czml3_ext.colours import RGBA
-
-blue = RGBA.blue.copy()
-blue[-1] = 100
+from czml3_ext.colours import RGBA_blue, RGBA_white
 
 sensor = packets.sensor(
     np.array([[31.4], [34.7], [1000]]),
@@ -40,17 +43,21 @@ sensor = packets.sensor(
     5_000,
     name="A Sensor",
     ellipsoid=Ellipsoid(
-        radii=[],
-        material=Material(solidColor=SolidColorMaterial(color=Color(rgba=blue))),
-        outlineColor=Color(rgba=RGBA.white),
+        radii=EllipsoidRadii(cartesian=[]),
+        material=Material(
+            solidColor=SolidColorMaterial(
+                color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+            )
+        ),
+        outlineColor=Color(rgba=RGBA_white),
         fill=True,
         outline=True,
     ),
 )
 
-doc = Document([Preamble(name="simple")] + sensor)
+doc = Document(packets=[Preamble(name="simple")] + sensor)
 with open("example.czml", "w") as f:
-    doc.dump(f)
+    f.write(doc.dumps())
 ```
 
 This produces the following view:
