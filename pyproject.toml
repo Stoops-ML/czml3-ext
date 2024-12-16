@@ -166,7 +166,6 @@ legacy_tox_ini = """
     extras = tests
     commands =
         pytest
-        mypy
 
     [testenv:quality]
     description = checks code quality
@@ -180,4 +179,5 @@ legacy_tox_ini = """
         ruff check
         ruff format --diff
         python -m build --wheel
+        mypy
 """
