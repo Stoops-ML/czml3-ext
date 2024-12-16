@@ -44,7 +44,7 @@ sensor = packets.sensor(
     5_000,
     name="A Sensor",
     ellipsoid=Ellipsoid(
-        radii=EllipsoidRadii(cartesian=[]),
+        radii=EllipsoidRadii(cartesian=[0, 0, 0]),
         material=Material(
             solidColor=SolidColorMaterial(
                 color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
