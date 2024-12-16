@@ -960,7 +960,7 @@ def border(
     borders: str
     | npt.NDArray[np.floating[TNP]]
     | Sequence[str | npt.NDArray[np.floating[TNP]]],
-    step: int | Sequence[int] = 1,
+    steps: int | Sequence[int] = 1,
     **update_packets,
 ) -> list[Packet]:
     """Create a CZML3 packet of a border.
@@ -990,8 +990,8 @@ def border(
     """
     if isinstance(borders, str | np.ndarray):
         borders = [borders]
-    if isinstance(step, int):
-        step = [step for _ in range(len(borders))]
+    if isinstance(steps, int):
+        steps = [steps for _ in range(len(borders))]
 
     # modify additional inputs
     add_params_per_border: list[dict[str, Any]] = [{} for _ in range(len(borders))]
@@ -1030,7 +1030,9 @@ def border(
             Packet(
                 polyline=Polyline(
                     positions=PositionList(
-                        cartographicDegrees=ddm_LLA_border[:: step[i_border], [1, 0, 2]]
+                        cartographicDegrees=ddm_LLA_border[
+                            :: steps[i_border], [1, 0, 2]
+                        ]
                         .ravel()
                         .tolist()
                     ),
