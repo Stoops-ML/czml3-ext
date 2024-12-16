@@ -4,8 +4,6 @@ on: [pull_request]
 
 jobs:
   tox-checks:
-    needs: lint
-    if: needs.lint.outputs.no_tox == 'false'
     runs-on: ubuntu-latest
     strategy:
       matrix:
