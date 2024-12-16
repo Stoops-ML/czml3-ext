@@ -1,6 +1,7 @@
 # czml3-ext
 ![PyPI - Version](https://img.shields.io/pypi/v/czml3_ext)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/czml3_ext)
+![build](https://img.shields.io/github/actions/workflow/status/Stoops-ML/czml3-ext/workflow.yml)
 ![PyPI - License](https://img.shields.io/pypi/l/czml3_ext)
 
 This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [CZML3](https://github.com/poliastro/czml3) for more information about CZML properties.
@@ -43,7 +44,7 @@ sensor = packets.sensor(
     5_000,
     name="A Sensor",
     ellipsoid=Ellipsoid(
-        radii=EllipsoidRadii(cartesian=[]),
+        radii=EllipsoidRadii(cartesian=[0, 0, 0]),
         material=Material(
             solidColor=SolidColorMaterial(
                 color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))

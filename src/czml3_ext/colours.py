@@ -90,6 +90,6 @@ def create_palette(colours: Sequence[RGBA], num_steps: int) -> list[RGBA]:
         if i_end > num_steps:
             i_end = num_steps
         out.extend(
-            np.linspace(colours[i], colours[i + 1], num=i_end - i_start).tolist()
+            np.linspace(colours[i], colours[i + 1], num=i_end - i_start).tolist()  # type: ignore
         )
     return out
