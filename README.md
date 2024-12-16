@@ -4,7 +4,7 @@
 ![build](https://img.shields.io/github/actions/workflow/status/Stoops-ML/czml3-ext/workflow.yml)
 ![PyPI - License](https://img.shields.io/pypi/l/czml3_ext)
 
-This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [CZML3](https://github.com/poliastro/czml3) for more information about CZML properties.
+This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [czml3](https://github.com/Stoops-ML/czml3) for more information about CZML properties.
 
 | Item     | Function in `czml3_ext.packets` |
 | -------- | ------------------------------- |
