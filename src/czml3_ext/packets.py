@@ -1118,7 +1118,9 @@ def coverage(
                     positions=PositionList(
                         cartographicDegrees=ddm_polygon[:, [1, 0, 2]].ravel().tolist()
                     ),
-                    holes=PositionListOfLists(cartographicDegrees=ddm_holes),
+                    holes=PositionListOfLists(cartographicDegrees=ddm_holes)
+                    if len(ddm_holes) > 0
+                    else None,
                     **add_params_polygon,
                 ),
                 **add_params1,
