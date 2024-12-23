@@ -12,9 +12,8 @@ description = "Create packets of CZML3"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
-    "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: BSD License - 3-Clause License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -24,13 +23,12 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
     "numpy>=1.0.0,<3.0.0",
     "shapely>=2.0.5",
     "scikit-image>=0.24.0",
-    "czml3>=2.1.0",
+    "czml3>=2.2.2",
     "transforms84>=0.3.2",
 ]
 dynamic = ["version"]

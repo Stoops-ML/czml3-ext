@@ -2,7 +2,6 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/czml3_ext)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/czml3_ext)
 ![build](https://img.shields.io/github/actions/workflow/status/Stoops-ML/czml3-ext/workflow.yml)
-![PyPI - License](https://img.shields.io/pypi/l/czml3_ext)
 
 This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [czml3](https://github.com/Stoops-ML/czml3) for more information about CZML properties.
 
@@ -22,7 +21,7 @@ See the example [notebook](https://github.com/Stoops-ML/czml3-ext/blob/main/exam
 The following code produces a CZML file with a single sensor:
 ```
 import numpy as np
-from czml3 import Document, Preamble
+from czml3 import Document, Packet, CZML_VERSION
 from czml3.properties import (
     Color,
     Ellipsoid,
@@ -56,7 +55,9 @@ sensor = packets.sensor(
     ),
 )
 
-doc = Document(packets=[Preamble(name="simple")] + sensor)
+doc = Document(
+    packets=[Packet(name="simple", id="document", version=CZML_VERSION)] + sensor
+)
 with open("example.czml", "w") as f:
     f.write(doc.dumps())
 ```

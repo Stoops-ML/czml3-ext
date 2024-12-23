@@ -1,5 +1,5 @@
 import numpy as np
-from czml3 import Document, Preamble
+from czml3 import CZML_VERSION, Document, Packet
 from czml3.properties import (
     Color,
     Ellipsoid,
@@ -36,6 +36,8 @@ def test_readme():
         ),
     )
 
-    doc = Document(packets=[Preamble(name="simple")] + sensor)
+    doc = Document(
+        packets=[Packet(name="simple", id="document", version=CZML_VERSION)] + sensor
+    )
     with open("example.czml", "w") as f:
         f.write(doc.dumps())
