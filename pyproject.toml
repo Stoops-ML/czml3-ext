@@ -11,9 +11,9 @@ authors = [
 description = "Create packets of CZML3"
 readme = "README.md"
 requires-python = ">=3.10"
+license = {file = "LICENSE.txt"}
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD-3-Clause",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
