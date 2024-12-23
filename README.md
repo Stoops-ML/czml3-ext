@@ -22,7 +22,7 @@ See the example [notebook](https://github.com/Stoops-ML/czml3-ext/blob/main/exam
 The following code produces a CZML file with a single sensor:
 ```
 import numpy as np
-from czml3 import Document, Preamble
+from czml3 import Document, Packet, CZML_VERSION
 from czml3.properties import (
     Color,
     Ellipsoid,
@@ -56,7 +56,9 @@ sensor = packets.sensor(
     ),
 )
 
-doc = Document(packets=[Preamble(name="simple")] + sensor)
+doc = Document(
+    packets=[Packet(name="simple", id="document", version=CZML_VERSION)] + sensor
+)
 with open("example.czml", "w") as f:
     f.write(doc.dumps())
 ```
