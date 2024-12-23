@@ -12,9 +12,8 @@ description = "Create packets of CZML3"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
-    "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: BSD License - 3-Clause License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
