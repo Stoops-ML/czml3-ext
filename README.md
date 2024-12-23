@@ -2,7 +2,6 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/czml3_ext)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/czml3_ext)
 ![build](https://img.shields.io/github/actions/workflow/status/Stoops-ML/czml3-ext/workflow.yml)
-![PyPI - License](https://img.shields.io/pypi/l/czml3_ext)
 
 This library is a collection of functions that outputs `list`s of `czml3.packet`s for various items, as shown in the table below. See [czml3](https://github.com/Stoops-ML/czml3) for more information about CZML properties.
 
