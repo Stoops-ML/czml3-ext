@@ -132,11 +132,12 @@ def get_contours(
         if num_coverage is None:
             raise ValueError("num_coverage must be provided if raster is a file path")
         with rasterio.open(raster) as src:
-            raster = src.read(1) == num_coverage
+            arr = src.read(1) == num_coverage
             deg_origin_x, deg_origin_y = src.bounds.left, src.bounds.top
             deg_size_x = src.transform[0]
             deg_size_y = src.transform[4]
     else:
+        arr = raster
         if deg_origin_x is None:
             raise ValueError("deg_origin_x must be provided if raster is an array")
         if deg_size_x is None:
@@ -147,11 +148,11 @@ def get_contours(
             raise ValueError("deg_size_y must be provided if raster is an array")
 
     # checks
-    if not np.issubdtype(raster.dtype, np.bool_):
+    if not np.issubdtype(arr.dtype, np.bool_):
         raise TypeError("Array must be of type bool")
 
     # get contours
-    contours = measure.find_contours(raster, find_contours_level)
+    contours = measure.find_contours(arr, find_contours_level)
     dd_LL_contours = [np.zeros(c.shape, dtype=c.dtype) for c in contours]
     for i_contour, contour in enumerate(contours):
         dd_LL_contours[i_contour][:, 0] = deg_origin_y + contour[:, 0] * deg_size_y
@@ -164,7 +165,7 @@ def get_contours(
         rr, cc = draw.polygon(contour[:, 0], contour[:, 1])
         if rr.size == 0 or cc.size == 0:
             raise ValueError("Contour has no size")
-        pc_certainty_coverage = np.sum(raster[rr, cc]) / raster[rr, cc].size
+        pc_certainty_coverage = np.sum(arr[rr, cc]) / arr[rr, cc].size
         if pc_certainty_coverage >= pc_poly_certainty_required:
             dd_LL_coverages.append(dd_LL_contour)
         elif (1 - pc_certainty_coverage) >= pc_poly_certainty_required:
@@ -208,6 +209,11 @@ def get_coverage_amount(
     tuple[npt.NDArray[np.uint32], float, float, float, float]
         Tuple containing numpy array representing the pixel coverage count, origin x, origin y, delta x, delta y
     """
+    # checks
+    if len(raster_paths) < 2:
+        raise ValueError("At least two rasters must be provided")
+
+    # define extent
     min_x, min_y, max_x, max_y = None, None, None, None
     for f in raster_paths:
         with rasterio.open(f) as src:
@@ -223,6 +229,14 @@ def get_coverage_amount(
                 min_y = src.bounds.bottom
             if max_y is None or src.bounds.top > max_y:
                 max_y = src.bounds.top
+    assert (
+        min_x is not None
+        and max_x is not None
+        and min_y is not None
+        and max_y is not None
+        and delta_x is not None
+        and delta_y is not None
+    )
     height = int(np.ceil((max_y - min_y) / -delta_y))
     width = int(np.ceil((max_x - min_x) / delta_x))
     coverage_matrix = np.zeros((height, width), dtype=np.uint32)

@@ -138,7 +138,7 @@ plugins = "mypy_plugin"
 
 # Ignore certain missing imports
 [[tool.mypy.overrides]]
-module = ["pytest.*", "transforms84.*", "shapely.*"]
+module = ["pytest.*", "transforms84.*", "shapely.*", "rasterio.*"]
 ignore_missing_imports = true
 
 [tool.tox]
