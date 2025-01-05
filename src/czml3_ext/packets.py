@@ -1074,6 +1074,7 @@ def coverage(
     list[Packet]
         List of CZML3 packets.
     """
+    # init
     if not isinstance(dd_LL_coverages, Sequence):
         dd_LL_coverages = [dd_LL_coverages]
     if dd_LL_holes is None:

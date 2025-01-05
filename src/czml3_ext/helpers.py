@@ -1,10 +1,15 @@
 import base64
+import pathlib
+from collections.abc import Sequence
 from importlib import resources as impresources
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
+import rasterio
+from rasterio import transform
+from rasterio.warp import Resampling, reproject
 from skimage import draw, measure
 
 from . import data
@@ -71,12 +76,13 @@ def png2base64(file_path: str | Path) -> str:
 
 
 def get_contours(
-    arr: npt.NDArray[np.bool_],
-    deg_origin_x: float,
-    deg_size_x: float,
-    deg_origin_y: float,
-    deg_size_y: float,
+    raster: npt.NDArray[np.bool_] | str | pathlib.Path,
     *,
+    num_coverage: int | None = None,
+    deg_origin_x: float | None = None,
+    deg_origin_y: float | None = None,
+    deg_size_x: float | None = None,
+    deg_size_y: float | None = None,
     find_contours_level: float = 0.5,
     pc_poly_certainty_required: float = 0.9,
     error_on_uncertainty: bool = True,
@@ -86,16 +92,18 @@ def get_contours(
 
     Parameters
     ----------
-    arr : npt.NDArray[np.bool_]
-        Coverage array of boolean values
-    deg_origin_x : float
-        X origin of array
-    deg_size_x : float
-        Size of delta x of array
-    deg_origin_y : float
-        Y origin of array
-    deg_size_y : float
-        Size of delta y of array
+    arr : npt.NDArray[np.bool_] | str | pathlib.Path
+        Coverage array of boolean values or file path to raster
+    num_coverage : int, optional
+        Number in raster that represents coverage, by default None
+    deg_origin_x : float, optional
+        X origin of array, by default None
+    deg_size_x : float, optional
+        Size of delta x of array, by default None
+    deg_origin_y : float, optional
+        Y origin of array, by default None
+    deg_size_y : float, optional
+        Size of delta y of array, by default None
     find_contours_level : float, optional
         Level of finding contours, by default 0.5
     pc_poly_certainty_required : float, optional
@@ -119,6 +127,26 @@ def get_contours(
     ValueError
         _description_
     """
+    # init
+    if isinstance(raster, str | pathlib.Path):
+        if num_coverage is None:
+            raise ValueError("num_coverage must be provided if raster is a file path")
+        with rasterio.open(raster) as src:
+            arr = src.read(1) == num_coverage
+            deg_origin_x, deg_origin_y = src.bounds.left, src.bounds.top
+            deg_size_x = src.transform[0]
+            deg_size_y = src.transform[4]
+    else:
+        arr = raster
+        if deg_origin_x is None:
+            raise ValueError("deg_origin_x must be provided if raster is an array")
+        if deg_size_x is None:
+            raise ValueError("deg_size_x must be provided if raster is an array")
+        if deg_origin_y is None:
+            raise ValueError("deg_origin_y must be provided if raster is an array")
+        if deg_size_y is None:
+            raise ValueError("deg_size_y must be provided if raster is an array")
+
     # checks
     if not np.issubdtype(arr.dtype, np.bool_):
         raise TypeError("Array must be of type bool")
@@ -151,3 +179,81 @@ def get_contours(
                 f"Unsure if polygon is hole or coverage. Certainty of coverage = {pc_certainty_coverage:.2f} < {pc_poly_certainty_required:.2f}, certainty of hole = {1 - pc_certainty_coverage:.2f} < {pc_poly_certainty_required:.2f}"
             )
     return dd_LL_coverages, dd_LL_holes
+
+
+def get_coverage_amount(
+    raster_paths: Sequence[str | pathlib.Path],
+    num_coverage: int,
+    *,
+    delta_x: float | None = None,
+    delta_y: float | None = None,
+    resampling_method: Resampling = Resampling.nearest,
+) -> tuple[npt.NDArray[np.uint32], float, float, float, float]:
+    """Computes a matrix representing how many times each pixel is covered by non-zero values from all given rasters.
+
+    Parameters
+    ----------
+    raster_paths : Sequence[str]
+        List of paths to the raster files.
+    num_coverage : int
+        Number in raster that represents coverage
+    delta_x : float | None, optional
+        Pixel size along x axis, by default None
+    delta_y : float | None, optional
+        Pixel size along y axis, by default None
+    resampling_method : Resampling, optional
+        Resampling method that is passed to `reproject` method, by default Resampling.nearest
+
+    Returns
+    -------
+    tuple[npt.NDArray[np.uint32], float, float, float, float]
+        Tuple containing numpy array representing the pixel coverage count, origin x, origin y, delta x, delta y
+    """
+    # checks
+    if len(raster_paths) < 2:
+        raise ValueError("At least two rasters must be provided")
+
+    # define extent
+    min_x, min_y, max_x, max_y = None, None, None, None
+    for f in raster_paths:
+        with rasterio.open(f) as src:
+            if delta_x is None:
+                delta_x = src.transform.a
+            if delta_y is None:
+                delta_y = src.transform.e
+            if min_x is None or src.bounds.left < min_x:
+                min_x = src.bounds.left
+            if max_x is None or src.bounds.right > max_x:
+                max_x = src.bounds.right
+            if min_y is None or src.bounds.bottom < min_y:
+                min_y = src.bounds.bottom
+            if max_y is None or src.bounds.top > max_y:
+                max_y = src.bounds.top
+    assert (
+        min_x is not None
+        and max_x is not None
+        and min_y is not None
+        and max_y is not None
+        and delta_x is not None
+        and delta_y is not None
+    )
+    height = int(np.ceil((max_y - min_y) / -delta_y))
+    width = int(np.ceil((max_x - min_x) / delta_x))
+    coverage_matrix = np.zeros((height, width), dtype=np.uint32)
+    tf = transform.from_bounds(min_x, min_y, max_x, max_y, width, height)
+
+    for f in raster_paths:
+        with rasterio.open(f) as src:
+            resampled_data = np.zeros(coverage_matrix.shape, dtype=np.uint32)
+            reproject(
+                source=rasterio.band(src, 1),
+                destination=resampled_data,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=tf,
+                dst_crs=src.crs,
+                resampling=resampling_method,
+            )
+            coverage_matrix += (resampled_data == num_coverage).astype(np.uint32)
+
+    return coverage_matrix, min_x, max_y, delta_x, delta_y
