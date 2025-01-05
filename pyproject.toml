@@ -30,6 +30,7 @@ dependencies = [
     "scikit-image>=0.24.0",
     "czml3>=2.2.2",
     "transforms84>=0.3.2",
+    "rasterio>=1.4.0",
 ]
 dynamic = ["version"]
 
