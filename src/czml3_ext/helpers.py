@@ -178,3 +178,68 @@ def get_contours(
                 f"Unsure if polygon is hole or coverage. Certainty of coverage = {pc_certainty_coverage:.2f} < {pc_poly_certainty_required:.2f}, certainty of hole = {1 - pc_certainty_coverage:.2f} < {pc_poly_certainty_required:.2f}"
             )
     return dd_LL_coverages, dd_LL_holes
+
+
+def get_coverage_amount(
+    raster_paths: Sequence[str | pathlib.Path],
+    num_coverage: int,
+    *,
+    delta_x: float | None = None,
+    delta_y: float | None = None,
+    resampling_method: Resampling = Resampling.nearest,
+) -> tuple[npt.NDArray[np.uint32], float, float, float, float]:
+    """Computes a matrix representing how many times each pixel is covered by non-zero values from all given rasters.
+
+    Parameters
+    ----------
+    raster_paths : Sequence[str]
+        List of paths to the raster files.
+    num_coverage : int
+        Number in raster that represents coverage
+    delta_x : float | None, optional
+        Pixel size along x axis, by default None
+    delta_y : float | None, optional
+        Pixel size along y axis, by default None
+    resampling_method : Resampling, optional
+        Resampling method that is passed to `reproject` method, by default Resampling.nearest
+
+    Returns
+    -------
+    tuple[npt.NDArray[np.uint32], float, float, float, float]
+        Tuple containing numpy array representing the pixel coverage count, origin x, origin y, delta x, delta y
+    """
+    min_x, min_y, max_x, max_y = None, None, None, None
+    for f in raster_paths:
+        with rasterio.open(f) as src:
+            if delta_x is None:
+                delta_x = src.transform.a
+            if delta_y is None:
+                delta_y = src.transform.e
+            if min_x is None or src.bounds.left < min_x:
+                min_x = src.bounds.left
+            if max_x is None or src.bounds.right > max_x:
+                max_x = src.bounds.right
+            if min_y is None or src.bounds.bottom < min_y:
+                min_y = src.bounds.bottom
+            if max_y is None or src.bounds.top > max_y:
+                max_y = src.bounds.top
+    height = int(np.ceil((max_y - min_y) / -delta_y))
+    width = int(np.ceil((max_x - min_x) / delta_x))
+    coverage_matrix = np.zeros((height, width), dtype=np.uint32)
+    tf = transform.from_bounds(min_x, min_y, max_x, max_y, width, height)
+
+    for f in raster_paths:
+        with rasterio.open(f) as src:
+            resampled_data = np.zeros(coverage_matrix.shape, dtype=np.uint32)
+            reproject(
+                source=rasterio.band(src, 1),
+                destination=resampled_data,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=tf,
+                dst_crs=src.crs,
+                resampling=resampling_method,
+            )
+            coverage_matrix += (resampled_data == num_coverage).astype(np.uint32)
+
+    return coverage_matrix, min_x, max_y, delta_x, delta_y
