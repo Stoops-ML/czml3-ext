@@ -1,10 +1,15 @@
 import base64
+import pathlib
+from collections.abc import Sequence
 from importlib import resources as impresources
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
+import rasterio
+from rasterio import transform
+from rasterio.warp import Resampling, reproject
 from skimage import draw, measure
 
 from . import data
@@ -71,12 +76,13 @@ def png2base64(file_path: str | Path) -> str:
 
 
 def get_contours(
-    arr: npt.NDArray[np.bool_],
-    deg_origin_x: float,
-    deg_size_x: float,
-    deg_origin_y: float,
-    deg_size_y: float,
+    raster: npt.NDArray[np.bool_] | str | pathlib.Path,
     *,
+    num_coverage: int | None = None,
+    deg_origin_x: float | None = None,
+    deg_origin_y: float | None = None,
+    deg_size_x: float | None = None,
+    deg_size_y: float | None = None,
     find_contours_level: float = 0.5,
     pc_poly_certainty_required: float = 0.9,
     error_on_uncertainty: bool = True,
@@ -86,16 +92,18 @@ def get_contours(
 
     Parameters
     ----------
-    arr : npt.NDArray[np.bool_]
-        Coverage array of boolean values
-    deg_origin_x : float
-        X origin of array
-    deg_size_x : float
-        Size of delta x of array
-    deg_origin_y : float
-        Y origin of array
-    deg_size_y : float
-        Size of delta y of array
+    arr : npt.NDArray[np.bool_] | str | pathlib.Path
+        Coverage array of boolean values or file path to raster
+    num_coverage : int, optional
+        Number in raster that represents coverage, by default None
+    deg_origin_x : float, optional
+        X origin of array, by default None
+    deg_size_x : float, optional
+        Size of delta x of array, by default None
+    deg_origin_y : float, optional
+        Y origin of array, by default None
+    deg_size_y : float, optional
+        Size of delta y of array, by default None
     find_contours_level : float, optional
         Level of finding contours, by default 0.5
     pc_poly_certainty_required : float, optional
@@ -119,12 +127,31 @@ def get_contours(
     ValueError
         _description_
     """
+    # init
+    if isinstance(raster, str | pathlib.Path):
+        if num_coverage is None:
+            raise ValueError("num_coverage must be provided if raster is a file path")
+        with rasterio.open(raster) as src:
+            raster = src.read(1) == num_coverage
+            deg_origin_x, deg_origin_y = src.bounds.left, src.bounds.top
+            deg_size_x = src.transform[0]
+            deg_size_y = src.transform[4]
+    else:
+        if deg_origin_x is None:
+            raise ValueError("deg_origin_x must be provided if raster is an array")
+        if deg_size_x is None:
+            raise ValueError("deg_size_x must be provided if raster is an array")
+        if deg_origin_y is None:
+            raise ValueError("deg_origin_y must be provided if raster is an array")
+        if deg_size_y is None:
+            raise ValueError("deg_size_y must be provided if raster is an array")
+
     # checks
-    if not np.issubdtype(arr.dtype, np.bool_):
+    if not np.issubdtype(raster.dtype, np.bool_):
         raise TypeError("Array must be of type bool")
 
     # get contours
-    contours = measure.find_contours(arr, find_contours_level)
+    contours = measure.find_contours(raster, find_contours_level)
     dd_LL_contours = [np.zeros(c.shape, dtype=c.dtype) for c in contours]
     for i_contour, contour in enumerate(contours):
         dd_LL_contours[i_contour][:, 0] = deg_origin_y + contour[:, 0] * deg_size_y
@@ -137,7 +164,7 @@ def get_contours(
         rr, cc = draw.polygon(contour[:, 0], contour[:, 1])
         if rr.size == 0 or cc.size == 0:
             raise ValueError("Contour has no size")
-        pc_certainty_coverage = np.sum(arr[rr, cc]) / arr[rr, cc].size
+        pc_certainty_coverage = np.sum(raster[rr, cc]) / raster[rr, cc].size
         if pc_certainty_coverage >= pc_poly_certainty_required:
             dd_LL_coverages.append(dd_LL_contour)
         elif (1 - pc_certainty_coverage) >= pc_poly_certainty_required:
