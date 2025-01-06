@@ -1,4 +1,5 @@
 # files
+*.tif.aux.xml
 *.czml
 
 # Editors
