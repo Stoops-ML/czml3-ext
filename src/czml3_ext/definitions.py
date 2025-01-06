@@ -1,5 +1,4 @@
-from typing import TypeVar
+import numpy as np
 
-import numpy.typing as npt
-
-TNP = TypeVar("TNP", bound=npt.NBitBase)
+RASTER_DTYPE = np.uint8
+STR_RASTER_DTYPE = "uint8"
