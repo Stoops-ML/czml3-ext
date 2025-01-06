@@ -1,8 +1,10 @@
+import pathlib
 from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+import rasterio
 import shapely
 from czml3 import Packet
 from czml3.properties import (
@@ -14,6 +16,9 @@ from czml3.properties import (
     PositionList,
     PositionListOfLists,
 )
+from rasterio.features import shapes
+from shapely import geometry
+from shapely.ops import unary_union
 from transforms84.helpers import DDM2RRM, RRM2DDM, wrap
 from transforms84.systems import WGS84
 from transforms84.transforms import (
@@ -22,51 +27,51 @@ from transforms84.transforms import (
     ECEF2geodetic,
 )
 
-from .definitions import TNP
+from .definitions import STR_RASTER_DTYPE
 from .errors import DataTypeError, MismatchedInputsError, NumDimensionsError, ShapeError
 from .helpers import get_border
 from .shapely_helpers import linear_ring2LLA, poly2LLA
 
 
 def sensor(
-    ddm_LLA: Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
-    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    ddm_LLA: Sequence[int | float | np.integer | np.floating]
+    | npt.NDArray[np.floating | np.integer],
     deg_az_broadside: int
     | float
-    | np.floating[TNP]
-    | np.integer[TNP]
-    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
-    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    | np.floating
+    | np.integer
+    | Sequence[int | float | np.integer | np.floating]
+    | npt.NDArray[np.floating | np.integer],
     deg_el_broadside: int
     | float
-    | np.floating[TNP]
-    | np.integer[TNP]
-    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
-    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    | np.floating
+    | np.integer
+    | Sequence[int | float | np.integer | np.floating]
+    | npt.NDArray[np.floating | np.integer],
     deg_az_FOV: int
     | float
-    | np.floating[TNP]
-    | np.integer[TNP]
-    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
-    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    | np.floating
+    | np.integer
+    | Sequence[int | float | np.integer | np.floating]
+    | npt.NDArray[np.floating | np.integer],
     deg_el_FOV: int
     | float
-    | np.floating[TNP]
-    | np.integer[TNP]
-    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
-    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    | np.floating
+    | np.integer
+    | Sequence[int | float | np.integer | np.floating]
+    | npt.NDArray[np.floating | np.integer],
     m_distance_max: int
     | float
-    | np.floating[TNP]
-    | np.integer[TNP]
-    | Sequence[int | float | np.integer[TNP] | np.floating[TNP]]
-    | npt.NDArray[np.floating[TNP] | np.integer[TNP]],
+    | np.floating
+    | np.integer
+    | Sequence[int | float | np.integer | np.floating]
+    | npt.NDArray[np.floating | np.integer],
     m_distance_min: int
     | float
-    | np.floating[TNP]
-    | np.integer[TNP]
-    | Sequence[int | float | np.floating[TNP] | np.integer[TNP]]
-    | npt.NDArray[np.integer[TNP] | np.floating[TNP]]
+    | np.floating
+    | np.integer
+    | Sequence[int | float | np.floating | np.integer]
+    | npt.NDArray[np.integer | np.floating]
     | None = None,
     *,
     subdivisions: int | Sequence[int] = 64,
@@ -95,19 +100,19 @@ def sensor(
 
     Parameters
     ----------
-    ddm_LLA : Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
+    ddm_LLA : Sequence[int | float | np.integer | np.floating] | npt.NDArray[np.floating | np.integer]
         Location of sensor(s) in LLA [deg, deg, m] of shape (3, 1) for one sensor of (n, 3, 1) for n sensors
-    deg_az_broadside : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
+    deg_az_broadside : int | float | np.floating | np.integer | Sequence[int | float | np.integer | np.floating] | npt.NDArray[np.floating | np.integer]
         Azimuth of sensor(s) [deg]
-    deg_el_broadside : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
+    deg_el_broadside : int | float | np.floating | np.integer | Sequence[int | float | np.integer | np.floating] | npt.NDArray[np.floating | np.integer]
         Elevation of sensor(s) [deg]
-    deg_az_FOV : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
+    deg_az_FOV : int | float | np.floating | np.integer | Sequence[int | float | np.integer | np.floating] | npt.NDArray[np.floating | np.integer]
         Azimuth FOV of sensor(s) [deg]
-    deg_el_FOV : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
+    deg_el_FOV : int | float | np.floating | np.integer | Sequence[int | float | np.integer | np.floating] | npt.NDArray[np.floating | np.integer]
         Elevation FOV of sensor(s) [deg]
-    m_distance_max : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.integer[TNP] | np.floating[TNP]] | npt.NDArray[np.floating[TNP] | np.integer[TNP]]
+    m_distance_max : int | float | np.floating | np.integer | Sequence[int | float | np.integer | np.floating] | npt.NDArray[np.floating | np.integer]
         Maximum range of sensor(s) [m]
-    m_distance_min : int | float | np.floating[TNP] | np.integer[TNP] | Sequence[int | float | np.floating[TNP] | np.integer[TNP]] | npt.NDArray[np.integer[TNP] | np.floating[TNP]] | None
+    m_distance_min : int | float | np.floating | np.integer | Sequence[int | float | np.floating | np.integer] | npt.NDArray[np.integer | np.floating] | None
         Minimum range of sensor(s) [m], by default None
     subdivisions : int, Sequence[int]
         The number of samples per azimuth and elevation arc, determining the granularity of the curvature, by default 64
@@ -782,14 +787,14 @@ def sensor(
 
 
 def grid(
-    ddm_LLA: npt.NDArray[np.integer[TNP] | np.floating[TNP]]
-    | Sequence[int | float | np.floating[TNP] | np.integer[TNP]],
+    ddm_LLA: npt.NDArray[np.integer | np.floating]
+    | Sequence[int | float | np.floating | np.integer],
     deg_zero_tolerance_lat: float = 10e-5,
     deg_zero_tolerance_long: float = 10e-5,
     *,
     ddm_LLA_cut: None
-    | npt.NDArray[np.floating[TNP]]
-    | Sequence[int | float | np.floating[TNP] | np.integer[TNP]] = None,
+    | npt.NDArray[np.floating]
+    | Sequence[int | float | np.floating | np.integer] = None,
     **update_packets,
 ) -> list[Packet]:
     """Make a grid in CZML.
@@ -809,13 +814,13 @@ def grid(
 
     Parameters
     ----------
-    ddm_LLA : npt.NDArray[np.integer[TNP] | np.floating[TNP]] | Sequence[int | float | np.floating[TNP] | np.integer[TNP]]
+    ddm_LLA : npt.NDArray[np.integer | np.floating] | Sequence[int | float | np.floating | np.integer]
         3D numpy array or sequence containing lat [deg], long [deg], alt [m] points
     deg_zero_tolerance_lat : float
         Tolerance of 0 degrees for latittude
     deg_zero_tolerance_long : float
         Tolerance of 0 degrees for longitude
-    ddm_LLA_cut : None | npt.NDArray[np.floating[TNP]] | Sequence[int | float | np.floating[TNP] | np.integer[TNP]]
+    ddm_LLA_cut : None | npt.NDArray[np.floating] | Sequence[int | float | np.floating | np.integer]
         3D numpy array or sequence containing lat [deg], long [deg], alt [m] points that will cut the polygons.
 
     Returns
@@ -957,9 +962,7 @@ def grid(
 
 
 def border(
-    borders: str
-    | npt.NDArray[np.floating[TNP]]
-    | Sequence[str | npt.NDArray[np.floating[TNP]]],
+    borders: str | npt.NDArray[np.floating] | Sequence[str | npt.NDArray[np.floating]],
     steps: int | Sequence[int] = 1,
     **update_packets,
 ) -> list[Packet]:
@@ -973,7 +976,7 @@ def border(
 
     Parameters
     ----------
-    borders : str | npt.NDArray[np.floating[TNP]] | Sequence[str | npt.NDArray[np.floating[TNP]]]
+    borders : str | npt.NDArray[np.floating] | Sequence[str | npt.NDArray[np.floating]]
         The border(s) packets requested
     step : int, Sequence[int], optional
         Step of border points, by default 1
@@ -1045,56 +1048,109 @@ def border(
 
 
 def coverage(
-    dd_LL_coverages: Sequence[npt.NDArray[np.floating[TNP]]]
-    | npt.NDArray[np.floating[TNP]],
-    dd_LL_holes: Sequence[npt.NDArray[np.floating[TNP]]]
-    | npt.NDArray[np.floating[TNP]]
-    | None = None,
+    raster_paths_coverage: Sequence[str | pathlib.Path] | str | pathlib.Path,
+    raster_paths_hole: Sequence[str | pathlib.Path] | str | pathlib.Path | None = None,
+    band_per_raster_coverage: int | Sequence[int] = 1,
+    band_per_raster_hole: int | Sequence[int] = 1,
+    *,
+    delete_rasters: bool = False,
     **update_packets,
 ) -> list[Packet]:
     """Create czml3 packets of coverage (including holes).
+
+    The rasters must have a data type of `RASTER_DTYPE`.
 
     All packets in the output may be updated using kwargs.
     Each value of the kwarg will be assigned to all CZML3 packets.
     Note that the following czml3.properties.Polygon properties are ignored:
         - positions
         - holes
-        - outlineColor
-        - outline
 
     Parameters
     ----------
-    dd_LL_coverages : Sequence[npt.NDArray[np.floating[TNP]]] | npt.NDArray[np.floating[TNP]]
-        Contours of coverages
-    dd_LL_holes : Sequence[npt.NDArray[np.floating[TNP]]] | npt.NDArray[np.floating[TNP]] | None, optional
-        Contours of holes, by default None
+    raster_paths_coverage : Sequence[str  |  pathlib.Path] | str | pathlib.Path
+        Path(s) to the raster(s) that will be used for coverage.
+    raster_paths_hole : Sequence[str  |  pathlib.Path] | str | pathlib.Path | None, optional
+        Path(s) to the raster(s) that will be used for holes, by default None
+    band_per_raster_coverage : int | Sequence[int], optional
+        Band(s) of each coverage raster, by default 1
+    band_per_raster_hole : int | Sequence[int], optional
+        Band(s) of each hole raster, by default 1
+    delete_rasters : bool, optional
+        If True then the function will delete the inputted rasters, by default False
 
     Returns
     -------
     list[Packet]
-        List of CZML3 packets.
+        List of czml3 packets.
+
+    Raises
+    ------
+    ValueError
+        Raised if the coverage raster is not of type `RASTER_DTYPE`.
+    ValueError
+        Raised if the hole raster is not of type `RASTER_DTYPE`.
     """
     # init
-    if not isinstance(dd_LL_coverages, Sequence):
-        dd_LL_coverages = [dd_LL_coverages]
-    if dd_LL_holes is None:
-        dd_LL_holes = []
-    elif not isinstance(dd_LL_holes, Sequence):
-        dd_LL_holes = [dd_LL_holes]
+    if isinstance(raster_paths_coverage, str | pathlib.Path):
+        raster_paths_coverage = [raster_paths_coverage]
+    if not isinstance(band_per_raster_coverage, Sequence):
+        band_per_raster_coverage = [band_per_raster_coverage] * len(
+            raster_paths_coverage
+        )
+    if raster_paths_hole is None:
+        raster_paths_hole = []
+    if isinstance(raster_paths_hole, str | pathlib.Path):
+        raster_paths_hole = [raster_paths_hole]
+    if not isinstance(band_per_raster_hole, Sequence):
+        band_per_raster_hole = [band_per_raster_hole] * len(raster_paths_hole)
+    fpath_rasters_coverages = list(map(pathlib.Path, raster_paths_coverage))
+    fpath_rasters_holes = list(map(pathlib.Path, raster_paths_hole))
 
-    # get holes and coverage polygons
-    polys_coverage = [shapely.Polygon(d[:, [1, 0]]) for d in dd_LL_coverages]
-    polys_hole = [shapely.Polygon(d[:, [1, 0]]) for d in dd_LL_holes]
+    polys_coverage: list[shapely.Polygon] = []
+    for raster_path, band in zip(
+        fpath_rasters_coverages, band_per_raster_coverage, strict=False
+    ):
+        with rasterio.open(raster_path) as src:
+            if src.dtypes[band - 1] != STR_RASTER_DTYPE:
+                raise ValueError(f"Raster must be of type {STR_RASTER_DTYPE}.")
+            raster_data = src.read(band)
+            for geom, _ in shapes(
+                raster_data, mask=raster_data, transform=src.transform
+            ):
+                # if np.isin(value, target_value):
+                polys_coverage.append(geometry.shape(geom))
+
+    polys_hole: list[shapely.Polygon] = []
+    for raster_path, band in zip(
+        fpath_rasters_holes, band_per_raster_hole, strict=False
+    ):
+        with rasterio.open(raster_path) as src:
+            if src.dtypes[band - 1] != STR_RASTER_DTYPE:
+                raise ValueError(f"Raster must be of type {STR_RASTER_DTYPE}.")
+            raster_data = src.read(band)
+            for geom, _ in shapes(
+                raster_data, mask=raster_data, transform=src.transform
+            ):
+                # if np.isin(value, target_value):
+                polys_hole.append(geometry.shape(geom))
+
+    # delete raster files
+    if delete_rasters:
+        for paths in (fpath_rasters_coverages, fpath_rasters_holes):
+            for path in paths:
+                path.unlink()
 
     # remove holes from coverage polygons
-    for i_polygon in range(len(polys_coverage)):
-        for hole in polys_hole:
-            if not polys_coverage[i_polygon].intersects(hole):
-                continue
-            polys_coverage[i_polygon] = polys_coverage[i_polygon].difference(hole)
-
-    # create MultiPolygon
-    multipolygon_coverage_per_sensor = shapely.MultiPolygon(polys_coverage)
+    multipolygon_coverage_per_sensor = unary_union(polys_coverage)
+    poly_holes = unary_union(polys_hole)
+    multipolygon_coverage_per_sensor = multipolygon_coverage_per_sensor.difference(
+        poly_holes
+    )
+    if isinstance(multipolygon_coverage_per_sensor, shapely.Polygon):
+        multipolygon_coverage_per_sensor = shapely.MultiPolygon(
+            [multipolygon_coverage_per_sensor]
+        )
 
     # modify additional inputs
     add_params1: dict[str, Any] = {}
@@ -1110,7 +1166,7 @@ def coverage(
     # create packets
     out: list[Packet] = []
     for polygon in multipolygon_coverage_per_sensor.geoms:
-        ddm_polygon: npt.NDArray[np.floating[TNP]] = poly2LLA(polygon)
+        ddm_polygon: npt.NDArray[np.floating] = poly2LLA(polygon)
         ddm_holes = [
             linear_ring2LLA(interior)[:, [1, 0, 2]].ravel().tolist()
             for interior in polygon.interiors
