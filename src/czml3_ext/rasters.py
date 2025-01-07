@@ -21,6 +21,7 @@ def ops(
     out_path: str | pathlib.Path | None = None,
     band: int = 1,
     overwrite_file: bool = True,
+    error_if_no_data: bool = True,
 ) -> pathlib.Path:
     """Create a raster representing the result of multiple operations on a raster.
 
@@ -38,6 +39,8 @@ def ops(
         Band of geotiff, by default 1
     overwrite_file : bool, optional
         Overwrite the output file if True else raise an error if the file exists, by default True
+    error_if_no_data : bool, optional
+        Raise an error if no data is found in the raster, by default True
 
     Returns
     -------
@@ -48,6 +51,8 @@ def ops(
     ------
     FileExistsError
         If the output file already exists and `overwrite_file` is False.
+    ValueError
+        If the number of rasters, target values, operations and bands are not the same.
     """
     # init
     if out_path is None:
@@ -63,17 +68,24 @@ def ops(
     if isinstance(operation_per_value, str):
         operation_per_value = [operation_per_value] * len(values)
 
+    # checks
+    if len(values) != len(operation_per_value):
+        raise ValueError("The number of values and operations must be the same.")
+
     # perform operations
     with rasterio.open(raster_path) as src:
         data = src.read(band)
         mask = np.ones(data.shape, dtype=RASTER_DTYPE)
         for v, operation in zip(values, operation_per_value, strict=False):
             mask &= perform_operation(operation, data, v)
-
         out_meta = src.meta.copy()
-        out_meta.update(dtype=RASTER_DTYPE, nodata=None, count=1)
-        with rasterio.open(out_path, "w", **out_meta) as dst:
-            dst.write(mask.astype(RASTER_DTYPE), 1)
+
+    # create raster
+    if error_if_no_data and not np.any(mask):
+        raise ValueError("Created raster is empty.")
+    out_meta.update(dtype=RASTER_DTYPE, nodata=None, count=1)
+    with rasterio.open(out_path, "w", **out_meta) as dst:
+        dst.write(mask.astype(RASTER_DTYPE), 1)
     return out_path
 
 
@@ -89,7 +101,7 @@ def coverage_amount(
     resampling_method: Resampling = Resampling.nearest,
     band_per_raster: int | Sequence[int] = 1,
     overwrite_file: bool = True,
-) -> pathlib.Path:
+) -> tuple[pathlib.Path, list[int]]:
     """Create a raster representing how many times each pixel is covered by the target values from all given rasters.
 
     Parameters
@@ -100,6 +112,8 @@ def coverage_amount(
         Values that represent coverage in each raster. If a single int is given, it is assumed that all rasters have the same target values. If a list of ints is given, it is assumed that each raster has its own target values. If a list of lists of ints is given, it is assumed that each raster has multiple target values.
     out_path : str | pathlib.Path, optional
         Raster output file path, by default "coverage.tif"
+    operation_per_value : Literal[&quot;eq&quot;, &quot;ge&quot;, &quot;le&quot;, &quot;g&quot;, &quot;l&quot;] | Sequence[Literal[&quot;eq&quot;, &quot;ge&quot;, &quot;le&quot;, &quot;g&quot;, &quot;l&quot;]], optional
+        Operation to perform on each value, by default "eq"
     delta_x : float | None, optional
         Pixel size along x axis, by default None
     delta_y : float | None, optional
@@ -120,6 +134,8 @@ def coverage_amount(
     ------
     FileExistsError
         If the output file already exists and `overwrite_file` is False.
+    ValueError
+        If the number of rasters, target values, operations and bands are not the same.
     """
 
     # init
@@ -137,6 +153,17 @@ def coverage_amount(
         operation_per_raster = [operation_per_raster] * len(raster_paths)
     if not isinstance(band_per_raster, Sequence):
         band_per_raster = [band_per_raster] * len(raster_paths)
+
+    # checks
+    if not (
+        len(raster_paths)
+        == len(target_values_per_raster)
+        == len(operation_per_raster)
+        == len(band_per_raster)
+    ):
+        raise ValueError(
+            "The number of rasters, target values, operations and bands must be the same."
+        )
 
     # define extent
     min_x, min_y, max_x, max_y = None, None, None, None
@@ -201,4 +228,4 @@ def coverage_amount(
     with rasterio.open(out_path, "w", **out_meta) as out_raster:
         out_raster.write(coverage_matrix, 1)
 
-    return out_path
+    return out_path, np.unique(coverage_matrix).ravel().tolist()

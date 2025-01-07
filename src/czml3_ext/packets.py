@@ -1087,6 +1087,10 @@ def coverage(
     Raises
     ------
     ValueError
+        Raised if the number of coverage rasters must be equal to the number of provided bands..
+    ValueError
+        Raised if the number of hole rasters must be equal to the number of provided bands..
+    ValueError
         Raised if the coverage raster is not of type `RASTER_DTYPE`.
     ValueError
         Raised if the hole raster is not of type `RASTER_DTYPE`.
@@ -1106,6 +1110,16 @@ def coverage(
         band_per_raster_hole = [band_per_raster_hole] * len(raster_paths_hole)
     fpath_rasters_coverages = list(map(pathlib.Path, raster_paths_coverage))
     fpath_rasters_holes = list(map(pathlib.Path, raster_paths_hole))
+
+    # checks
+    if len(fpath_rasters_coverages) != len(band_per_raster_coverage):
+        raise ValueError(
+            "The number of coverage rasters must be equal to the number of provided bands."
+        )
+    if len(fpath_rasters_holes) != len(band_per_raster_hole):
+        raise ValueError(
+            "The number of hole rasters must be equal to the number of provided bands."
+        )
 
     polys_coverage: list[shapely.Polygon] = []
     for raster_path, band in zip(
