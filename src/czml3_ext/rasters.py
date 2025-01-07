@@ -134,6 +134,8 @@ def coverage_amount(
     ------
     FileExistsError
         If the output file already exists and `overwrite_file` is False.
+    ValueError
+        If the number of rasters, target values, operations and bands are not the same.
     """
 
     # init
@@ -151,6 +153,17 @@ def coverage_amount(
         operation_per_raster = [operation_per_raster] * len(raster_paths)
     if not isinstance(band_per_raster, Sequence):
         band_per_raster = [band_per_raster] * len(raster_paths)
+
+    # checks
+    if not (
+        len(raster_paths)
+        == len(target_values_per_raster)
+        == len(operation_per_raster)
+        == len(band_per_raster)
+    ):
+        raise ValueError(
+            "The number of rasters, target values, operations and bands must be the same."
+        )
 
     # define extent
     min_x, min_y, max_x, max_y = None, None, None, None
