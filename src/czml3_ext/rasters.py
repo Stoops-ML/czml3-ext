@@ -112,6 +112,8 @@ def coverage_amount(
         Values that represent coverage in each raster. If a single int is given, it is assumed that all rasters have the same target values. If a list of ints is given, it is assumed that each raster has its own target values. If a list of lists of ints is given, it is assumed that each raster has multiple target values.
     out_path : str | pathlib.Path, optional
         Raster output file path, by default "coverage.tif"
+    operation_per_value : Literal[&quot;eq&quot;, &quot;ge&quot;, &quot;le&quot;, &quot;g&quot;, &quot;l&quot;] | Sequence[Literal[&quot;eq&quot;, &quot;ge&quot;, &quot;le&quot;, &quot;g&quot;, &quot;l&quot;]], optional
+        Operation to perform on each value, by default "eq"
     delta_x : float | None, optional
         Pixel size along x axis, by default None
     delta_y : float | None, optional
