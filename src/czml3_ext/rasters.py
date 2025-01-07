@@ -101,7 +101,7 @@ def coverage_amount(
     resampling_method: Resampling = Resampling.nearest,
     band_per_raster: int | Sequence[int] = 1,
     overwrite_file: bool = True,
-) -> pathlib.Path:
+) -> tuple[pathlib.Path, list[int]]:
     """Create a raster representing how many times each pixel is covered by the target values from all given rasters.
 
     Parameters
@@ -213,4 +213,4 @@ def coverage_amount(
     with rasterio.open(out_path, "w", **out_meta) as out_raster:
         out_raster.write(coverage_matrix, 1)
 
-    return out_path
+    return out_path, np.unique(coverage_matrix).ravel().tolist()
