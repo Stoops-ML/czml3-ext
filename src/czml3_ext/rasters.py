@@ -21,6 +21,7 @@ def ops(
     out_path: str | pathlib.Path | None = None,
     band: int = 1,
     overwrite_file: bool = True,
+    error_if_no_data: bool = True,
 ) -> pathlib.Path:
     """Create a raster representing the result of multiple operations on a raster.
 
@@ -38,6 +39,8 @@ def ops(
         Band of geotiff, by default 1
     overwrite_file : bool, optional
         Overwrite the output file if True else raise an error if the file exists, by default True
+    error_if_no_data : bool, optional
+        Raise an error if no data is found in the raster, by default True
 
     Returns
     -------
@@ -48,6 +51,8 @@ def ops(
     ------
     FileExistsError
         If the output file already exists and `overwrite_file` is False.
+    ValueError
+        If the number of rasters, target values, operations and bands are not the same.
     """
     # init
     if out_path is None:
@@ -63,17 +68,24 @@ def ops(
     if isinstance(operation_per_value, str):
         operation_per_value = [operation_per_value] * len(values)
 
+    # checks
+    if len(values) != len(operation_per_value):
+        raise ValueError("The number of values and operations must be the same.")
+
     # perform operations
     with rasterio.open(raster_path) as src:
         data = src.read(band)
         mask = np.ones(data.shape, dtype=RASTER_DTYPE)
         for v, operation in zip(values, operation_per_value, strict=False):
             mask &= perform_operation(operation, data, v)
-
         out_meta = src.meta.copy()
-        out_meta.update(dtype=RASTER_DTYPE, nodata=None, count=1)
-        with rasterio.open(out_path, "w", **out_meta) as dst:
-            dst.write(mask.astype(RASTER_DTYPE), 1)
+
+    # create raster
+    if error_if_no_data and not np.any(mask):
+        raise ValueError("Created raster is empty.")
+    out_meta.update(dtype=RASTER_DTYPE, nodata=None, count=1)
+    with rasterio.open(out_path, "w", **out_meta) as dst:
+        dst.write(mask.astype(RASTER_DTYPE), 1)
     return out_path
 
 
