@@ -50,11 +50,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "build",
 ]
-examples = [
-    "jupyterlab>=4.2.3",
-    "shapely>=2.0.4",
-    "rasterio>=1.3.11",
-]
+examples = ["marimo>=0.10.0"]
 
 [project.urls]
 Homepage = "https://github.com/Stoops-ML/czml3-ext"
