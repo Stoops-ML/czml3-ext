@@ -1,6 +1,7 @@
-import sys
-import subprocess
 import pathlib
+import subprocess
+import sys
+
 
 def test_examples():
     dir_examples = pathlib.Path(__file__).parent.parent / "examples"
