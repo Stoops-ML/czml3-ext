@@ -7,6 +7,7 @@ app = marimo.App()
 @app.cell
 def _():
     import datetime
+    import pathlib
 
     import marimo as mo
     import numpy as np
@@ -49,8 +50,15 @@ def _():
         mo,
         np,
         packets,
+        pathlib,
         shapely,
     )
+
+
+@app.cell
+def _(__file__, pathlib):
+    fdir = pathlib.Path(__file__).parent
+    return (fdir,)
 
 
 @app.cell
@@ -204,8 +212,8 @@ def _(
 
 
 @app.cell
-def _(doc):
-    with open("example_time.czml", "w") as f:
+def _(doc, fdir):
+    with open(fdir / "example_time.czml", "w") as f:
         f.write(doc.dumps())
     return (f,)
 

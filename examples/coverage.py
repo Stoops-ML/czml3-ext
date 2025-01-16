@@ -52,8 +52,8 @@ def _():
 
 @app.cell
 def _(__file__, pathlib):
-    dir = pathlib.Path(__file__).parent
-    return (dir,)
+    fdir = pathlib.Path(__file__).parent
+    return (fdir,)
 
 
 @app.cell
@@ -75,14 +75,14 @@ def _(mo):
 
 
 @app.cell
-def _(dir, packets, rasters):
-    vs = packets.coverage(rasters.ops(dir / "data.tif", 5), delete_rasters=True)
+def _(fdir, packets, rasters):
+    vs = packets.coverage(rasters.ops(fdir / "data.tif", 5), delete_rasters=True)
     return (vs,)
 
 
 @app.cell
-def _(dir, rasterio):
-    with rasterio.open(dir / "data.tif") as src:
+def _(fdir, rasterio):
+    with rasterio.open(fdir / "data.tif") as src:
         arr = src.read(1)
         origin_x, origin_y = src.transform * (0, 0)
         delta_x = src.transform[0]
@@ -110,13 +110,13 @@ def _(arr, delta_x, delta_y, np, origin_x, origin_y, packets):
 
 
 @app.cell
-def _(CZML_VERSION, Document, Packet, sensor_coverage, vs):
+def _(CZML_VERSION, Document, Packet, fdir, sensor_coverage, vs):
     _doc = Document(
         packets=[Packet(name="example", id="document", version=CZML_VERSION)]
         + vs
         + sensor_coverage
     )
-    with open("example.czml", "w") as _f:
+    with open(fdir / "example.czml", "w") as _f:
         _f.write(_doc.dumps())
     return
 
@@ -128,23 +128,23 @@ def _(mo):
 
 
 @app.cell
-def _(dir, packets, rasters):
+def _(fdir, packets, rasters):
     vs_hole = packets.coverage(
-        rasters.ops(dir / "data.tif", 5),
-        rasters.ops(dir / "data_cut.tif", 5),
+        rasters.ops(fdir / "data.tif", 5),
+        rasters.ops(fdir / "data_cut.tif", 5),
         delete_rasters=True,
     )
     return (vs_hole,)
 
 
 @app.cell
-def _(CZML_VERSION, Document, Packet, sensor_coverage, vs_hole):
+def _(CZML_VERSION, Document, Packet, fdir, sensor_coverage, vs_hole):
     _doc = Document(
         packets=[Packet(name="example", id="document", version=CZML_VERSION)]
         + vs_hole
         + sensor_coverage
     )
-    with open("example.czml", "w") as _f:
+    with open(fdir / "example.czml", "w") as _f:
         _f.write(_doc.dumps())
     return
 
@@ -161,21 +161,21 @@ def _(mo):
 
 
 @app.cell
-def _(dir, packets, rasters):
+def _(fdir, packets, rasters):
     vs_height = packets.coverage(
-        rasters.ops(dir / "data.tif", 100, "ge", band=2), delete_rasters=True
+        rasters.ops(fdir / "data.tif", 100, "ge", band=2), delete_rasters=True
     )
     return (vs_height,)
 
 
 @app.cell
-def _(CZML_VERSION, Document, Packet, sensor_coverage, vs_height):
+def _(CZML_VERSION, Document, Packet, fdir, sensor_coverage, vs_height):
     _doc = Document(
         packets=[Packet(name="example", id="document", version=CZML_VERSION)]
         + vs_height
         + sensor_coverage
     )
-    with open("example.czml", "w") as _f:
+    with open(fdir / "example.czml", "w") as _f:
         _f.write(_doc.dumps())
     return
 
@@ -192,23 +192,23 @@ def _(mo):
 
 
 @app.cell
-def _(dir, packets, rasters):
+def _(fdir, packets, rasters):
     vs_heights = packets.coverage(
-        rasters.ops(dir / "data.tif", 200, "le", band=2),
-        rasters.ops(dir / "data.tif", 100, "le", band=2),
+        rasters.ops(fdir / "data.tif", 200, "le", band=2),
+        rasters.ops(fdir / "data.tif", 100, "le", band=2),
         delete_rasters=True,
     )
     return (vs_heights,)
 
 
 @app.cell
-def _(CZML_VERSION, Document, Packet, sensor_coverage, vs_heights):
+def _(CZML_VERSION, Document, Packet, fdir, sensor_coverage, vs_heights):
     _doc = Document(
         packets=[Packet(name="example", id="document", version=CZML_VERSION)]
         + vs_heights
         + sensor_coverage
     )
-    with open("example.czml", "w") as _f:
+    with open(fdir / "example.czml", "w") as _f:
         _f.write(_doc.dumps())
     return
 
@@ -222,22 +222,22 @@ def _(mo):
 
 
 @app.cell
-def _(dir, packets, rasters):
+def _(fdir, packets, rasters):
     vs_heights_1 = packets.coverage(
-        rasters.ops(dir / "data.tif", [200, 100], ["le", "ge"], band=2),
+        rasters.ops(fdir / "data.tif", [200, 100], ["le", "ge"], band=2),
         delete_rasters=True,
     )
     return (vs_heights_1,)
 
 
 @app.cell
-def _(CZML_VERSION, Document, Packet, sensor_coverage, vs_heights_1):
+def _(CZML_VERSION, Document, Packet, fdir, sensor_coverage, vs_heights_1):
     _doc = Document(
         packets=[Packet(name="example", id="document", version=CZML_VERSION)]
         + vs_heights_1
         + sensor_coverage
     )
-    with open("example.czml", "w") as _f:
+    with open(fdir / "example.czml", "w") as _f:
         _f.write(_doc.dumps())
     return
 
@@ -251,9 +251,9 @@ def _(mo):
 
 
 @app.cell
-def _(dir, rasters):
+def _(fdir, rasters):
     try:
-        rasters.ops(dir / "data.tif", -999)  # error_if_no_data=True by default
+        rasters.ops(fdir / "data.tif", -999)  # error_if_no_data=True by default
     except ValueError as e:
         print(e)
     return
@@ -271,8 +271,8 @@ def _(mo):
 
 
 @app.cell
-def _(dir, rasters):
-    fpaths = [dir / "data_cut.tif", dir / "data.tif"]
+def _(fdir, rasters):
+    fpaths = [fdir / "data_cut.tif", fdir / "data.tif"]
     fpath_coverage, num_coverages = rasters.coverage_amount(fpaths, 5)
     return fpath_coverage, fpaths, num_coverages
 
@@ -317,11 +317,11 @@ def _(
 
 
 @app.cell
-def _(CZML_VERSION, Document, Packet, overlaps):
+def _(CZML_VERSION, Document, Packet, fdir, overlaps):
     _doc = Document(
         packets=[Packet(name="example", id="document", version=CZML_VERSION)] + overlaps
     )
-    with open("example.czml", "w") as _f:
+    with open(fdir / "example.czml", "w") as _f:
         _f.write(_doc.dumps())
     return
 
