@@ -171,8 +171,12 @@ def coverage_amount(
         with rasterio.open(f) as src:
             if delta_x is None:
                 delta_x = src.transform.a
+            else:
+                assert np.isclose(delta_x, src.transform.a)
             if delta_y is None:
                 delta_y = src.transform.e
+            else:
+                assert np.isclose(delta_y, src.transform.e)
             if min_x is None or src.bounds.left < min_x:
                 min_x = src.bounds.left
             if max_x is None or src.bounds.right > max_x:
