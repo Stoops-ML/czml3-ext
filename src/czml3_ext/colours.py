@@ -69,13 +69,13 @@ RGBA_purple = RGBA(127.0, 0.0, 255.0, 255.0)
 
 def create_palette(colours: Sequence[RGBA], num_steps: int) -> list[RGBA]:
     for c in colours:
-        assert (
-            len(c) == 4
-        ), "Each colour in colours must be RGBA (sequence with four elements)."
+        assert len(c) == 4, (
+            "Each colour in colours must be RGBA (sequence with four elements)."
+        )
     num_sections = len(colours) - 1
-    assert (
-        num_sections > 0
-    ), "Number of colours must be greater than one to create a palette"
+    assert num_sections > 0, (
+        "Number of colours must be greater than one to create a palette"
+    )
     num_steps_per_colour = int(np.floor(num_steps / num_sections))
     remainder = (num_steps / num_sections) % 1
 
