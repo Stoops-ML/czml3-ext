@@ -1,8 +1,12 @@
 import base64
+import json
+import pathlib
+from collections.abc import Sequence
 from importlib import resources as impresources
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
+import czml3
 import numpy as np
 import numpy.typing as npt
 
@@ -108,3 +112,78 @@ def perform_operation(
         case _:
             raise ValueError(f"Invalid operation: {operation}")
     return mask  # type: ignore
+
+
+def combine_docs(
+    documents: Sequence[czml3.Document | str | pathlib.Path | list[dict[str, Any]]],
+    ind_preamble: int | None = None,
+) -> str:
+    """Combine CZML documents.
+
+    Accepted types: string / pathlib.Path paths to files, czml3.Document objects and list of dictionaries.
+
+    Parameters
+    ----------
+    files : Sequence[czml3.Document  |  str  |  pathlib.Path  |  list[dict[str, Any]]]
+        Documents to combine
+    ind_preamble : int | None, optional
+        Index of document to use for preamble, by default None
+
+    Returns
+    -------
+    str
+        Combined document
+    """
+
+    def split_document(
+        packets: list[dict[str, Any]],
+    ) -> tuple[None | dict[str, Any], list[dict[str, Any]]]:
+        """Split the document into preamble and all other entities.
+
+        Parameters
+        ----------
+        packets : list[dict[str, Any]]
+            Packets of document.
+
+        Returns
+        -------
+        tuple[None | dict[str, Any], list[dict[str, Any]]]
+            Tuple of preamble (if no preamble found then will be `None`) and all other entities.
+        """
+        if packets[0]["id"] == "document":
+            return packets[0], packets[1:]
+        return None, packets
+
+    # init + checks
+    if ind_preamble is None:
+        ind_preamble = 0
+    if ind_preamble >= len(documents):
+        raise ValueError("Index of preamble must be less than the number of documents")
+
+    out: list[dict[str, Any]] = []
+    for i_doc, doc in enumerate(documents):
+        if isinstance(doc, czml3.Document):
+            preamble_tmp, rdoc = split_document(json.loads(doc.dumps()))
+        elif isinstance(doc, list):
+            preamble_tmp, rdoc = split_document(doc)
+        elif isinstance(doc, str | pathlib.Path):
+            doc = pathlib.Path(doc)
+            if not doc.exists():
+                raise FileNotFoundError
+            if not (doc.is_file() and doc.suffix == ".czml"):
+                raise TypeError("Input must be a czml file")
+            with open(doc) as fp:
+                rdoc = json.load(fp)
+            preamble_tmp, rdoc = split_document(rdoc)
+        else:
+            raise TypeError(f"Input type not recognised: {doc}")
+
+        out.extend(rdoc)
+        if ind_preamble == i_doc:
+            if preamble_tmp is None:
+                raise ValueError("Preamble not found in selected packet for preamble.")
+            preamble = preamble_tmp
+
+    if preamble is None:
+        raise ValueError("No preamble found.")
+    return json.dumps([preamble] + out)
