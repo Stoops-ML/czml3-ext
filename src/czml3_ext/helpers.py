@@ -127,7 +127,7 @@ def combine_docs(
     files : Sequence[czml3.Document  |  str  |  pathlib.Path  |  list[dict[str, Any]]]
         Documents to combine
     ind_preamble : int | None, optional
-        Index of file to use for preamble, by default None
+        Index of document to use for preamble, by default None
 
     Returns
     -------
