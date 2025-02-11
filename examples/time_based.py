@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.10.13"
+__generated_with = "0.11.2"
 app = marimo.App()
 
 
@@ -12,6 +12,8 @@ def _():
     import marimo as mo
     import numpy as np
     import shapely
+    from colourings import Colour
+    from colourings.colour import color_scale
     from czml3 import CZML_VERSION, Document, Packet
     from czml3.properties import (
         Clock,
@@ -25,25 +27,22 @@ def _():
 
     import czml3_ext
     from czml3_ext import packets
-    from czml3_ext.colours import RGBA_blue, RGBA_orange, RGBA_white, create_palette
     from czml3_ext.helpers import get_border
 
     return (
         CZML_VERSION,
         Clock,
         Color,
+        Colour,
         Document,
         IntervalValue,
         Material,
         Packet,
         Polygon,
         PositionList,
-        RGBA_blue,
-        RGBA_orange,
-        RGBA_white,
         SolidColorMaterial,
         TimeIntervalCollection,
-        create_palette,
+        color_scale,
         czml3_ext,
         datetime,
         get_border,
@@ -112,10 +111,12 @@ def _(get_border, np, shapely):
 
 
 @app.cell
-def _(RGBA_blue, RGBA_orange, RGBA_white, create_palette, ddm_LLA_points):
-    rgba = create_palette(
-        [RGBA_blue, RGBA_white, RGBA_orange, RGBA_blue], ddm_LLA_points.shape[0]
+def _(Colour, color_scale, ddm_LLA_points):
+    rgba = color_scale(
+        (Colour("blue"), Colour("white"), Colour("orange"), Colour("blue")),
+        ddm_LLA_points.shape[0],
     )
+    assert len(rgba) == ddm_LLA_points.shape[0]
     return (rgba,)
 
 
@@ -131,7 +132,7 @@ def _(Color, IntervalValue, datetime, rgba):
                 IntervalValue(
                     start=start + datetime.timedelta(seconds=s_step) * ii,
                     end=start + datetime.timedelta(seconds=s_step) * (ii + 1),
-                    value=Color(rgba=c),
+                    value=Color(rgbaf=c.rgba),
                 )
             )
         cc.append(d)
@@ -169,7 +170,8 @@ def _(
         ],
         name=[f"Square {i}" for i in range(len(rgba))],
         description=[
-            f"Colour: [{c[0]:.2f}, {c[1]:.2f}, {c[2]:.2f}, {c[3]:.2f}]" for c in rgba
+            f"Colour: [{c.rgba[0]:.2f}, {c.rgba[1]:.2f}, {c.rgba[2]:.2f}, {c.rgba[3]:.2f}]"
+            for c in rgba
         ],
         ddm_LLA_cut=ddm_LLA_israel,
     )

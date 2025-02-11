@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.10.13"
+__generated_with = "0.11.0"
 app = marimo.App()
 
 
@@ -11,6 +11,7 @@ def _():
     import marimo as mo
     import numpy as np
     import rasterio
+    from colourings import Colour, color_scale
     from czml3 import CZML_VERSION, Document, Packet
     from czml3.properties import (
         Color,
@@ -22,24 +23,18 @@ def _():
 
     import czml3_ext
     from czml3_ext import packets, rasters
-    from czml3_ext.colours import (
-        RGBA_black,
-        RGBA_white,
-        create_palette,
-    )
 
     return (
         CZML_VERSION,
         Color,
+        Colour,
         Document,
         Material,
         Packet,
         Polygon,
         PositionList,
-        RGBA_black,
-        RGBA_white,
         SolidColorMaterial,
-        create_palette,
+        color_scale,
         czml3_ext,
         mo,
         np,
@@ -278,8 +273,8 @@ def _(fdir, rasters):
 
 
 @app.cell
-def _(RGBA_black, RGBA_white, create_palette, fpaths):
-    rgba = create_palette([RGBA_black, RGBA_white], len(fpaths) + 1)
+def _(Colour, color_scale, fpaths):
+    rgba = color_scale((Colour("black"), Colour("white")), len(fpaths) + 1)
     return (rgba,)
 
 
@@ -306,7 +301,7 @@ def _(
                     positions=PositionList(cartographicDegrees=[0, 0, 0]),
                     material=Material(
                         solidColor=SolidColorMaterial(
-                            color=Color(rgba=rgba[num_covers])
+                            color=Color(rgbaf=rgba[num_covers].rgba)
                         )
                     ),
                 ),
