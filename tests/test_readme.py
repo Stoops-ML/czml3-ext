@@ -1,4 +1,5 @@
 import numpy as np
+from colourings import Colour
 from czml3 import CZML_VERSION, Document, Packet
 from czml3.properties import (
     Color,
@@ -9,7 +10,6 @@ from czml3.properties import (
 )
 
 from czml3_ext import packets
-from czml3_ext.colours import RGBA_blue, RGBA_white
 
 
 def test_readme():
@@ -27,10 +27,10 @@ def test_readme():
             radii=EllipsoidRadii(cartesian=[0, 0, 0]),
             material=Material(
                 solidColor=SolidColorMaterial(
-                    color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                    color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
-            outlineColor=Color(rgba=RGBA_white),
+            outlineColor=Color(rgba=Colour("white").rgb),
             fill=True,
             outline=True,
         ),
