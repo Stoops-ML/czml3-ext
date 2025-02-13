@@ -1,5 +1,6 @@
 import json
 from tempfile import mktemp
+from typing import Any
 
 import pytest
 from czml3 import CZML_VERSION, Document, Packet
@@ -50,7 +51,7 @@ def test_get_billboard():
 
 
 def test_combine_docs():
-    p0 = [
+    p0: list[dict[str, Any]] = [
         {
             "id": "document",
             "name": "simple",

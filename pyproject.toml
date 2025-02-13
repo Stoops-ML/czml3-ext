@@ -50,7 +50,10 @@ dev = [
     "pytest-cov>=5.0.0",
     "build",
 ]
-examples = ["marimo>=0.10.0"]
+examples = [
+    "marimo>=0.10.0",
+    "colourings>=0.2.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/Stoops-ML/czml3-ext"
@@ -139,7 +142,6 @@ module = [
     "transforms84.*",
     "shapely.*",
     "rasterio.*",
-    "czml3.*",
 ]
 ignore_missing_imports = true
 

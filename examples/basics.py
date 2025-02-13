@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.10.13"
+__generated_with = "0.11.0"
 app = marimo.App()
 
 
@@ -11,6 +11,7 @@ def _():
     import marimo as mo
     import numpy as np
     import shapely
+    from colourings import Colour
     from czml3 import CZML_VERSION, Document, Packet
     from czml3.properties import (
         Color,
@@ -26,17 +27,12 @@ def _():
 
     import czml3_ext
     from czml3_ext import packets
-    from czml3_ext.colours import (
-        RGBA_blue,
-        RGBA_orange,
-        RGBA_white,
-        create_palette,
-    )
     from czml3_ext.helpers import get_border
 
     return (
         CZML_VERSION,
         Color,
+        Colour,
         Document,
         Ellipsoid,
         EllipsoidRadii,
@@ -46,11 +42,7 @@ def _():
         Polyline,
         PolylineMaterial,
         PositionList,
-        RGBA_blue,
-        RGBA_orange,
-        RGBA_white,
         SolidColorMaterial,
-        create_palette,
         czml3_ext,
         get_border,
         mo,
@@ -116,11 +108,10 @@ def _(mo):
 @app.cell
 def _(
     Color,
+    Colour,
     Ellipsoid,
     EllipsoidRadii,
     Material,
-    RGBA_blue,
-    RGBA_white,
     SolidColorMaterial,
     np,
     packets,
@@ -140,10 +131,10 @@ def _(
             ),  # required to create an Ellipsoid(), and is ignored by czml3-ext
             material=Material(
                 solidColor=SolidColorMaterial(
-                    color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                    color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
-            outlineColor=Color(rgba=RGBA_white),
+            outlineColor=Color(rgbaf=Colour("white").rgba),
             fill=True,
             outline=True,
         ),
@@ -154,10 +145,10 @@ def _(
 @app.cell
 def _(
     Color,
+    Colour,
     Ellipsoid,
     EllipsoidRadii,
     Material,
-    RGBA_blue,
     SolidColorMaterial,
     np,
     packets,
@@ -177,7 +168,7 @@ def _(
             ),  # required to create an Ellipsoid(), and is ignored by czml3-ext
             material=Material(
                 solidColor=SolidColorMaterial(
-                    color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                    color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
             fill=True,
@@ -189,11 +180,10 @@ def _(
 @app.cell
 def _(
     Color,
+    Colour,
     Ellipsoid,
     EllipsoidRadii,
     Material,
-    RGBA_blue,
-    RGBA_white,
     SolidColorMaterial,
     np,
     packets,
@@ -213,10 +203,10 @@ def _(
             ),  # required to create an Ellipsoid(), and is ignored by czml3-ext
             material=Material(
                 solidColor=SolidColorMaterial(
-                    color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                    color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
-            outlineColor=Color(rgba=RGBA_white),
+            outlineColor=Color(rgbaf=Colour("white").rgba),
             fill=True,
             outline=True,
         ),
@@ -228,11 +218,10 @@ def _(
 @app.cell
 def _(
     Color,
+    Colour,
     Ellipsoid,
     EllipsoidRadii,
     Material,
-    RGBA_blue,
-    RGBA_white,
     SolidColorMaterial,
     np,
     packets,
@@ -252,10 +241,10 @@ def _(
             ),  # required to create an Ellipsoid(), and is ignored by czml3-ext
             material=Material(
                 solidColor=SolidColorMaterial(
-                    color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                    color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
-            outlineColor=Color(rgba=RGBA_white),
+            outlineColor=Color(rgbaf=Colour("white").rgba),
             fill=True,
             outline=True,
             slicePartitions=3,
@@ -274,14 +263,13 @@ def _(mo):
 @app.cell
 def _(
     Color,
+    Colour,
     Ellipsoid,
     EllipsoidRadii,
     Material,
     Polyline,
     PolylineMaterial,
     PositionList,
-    RGBA_blue,
-    RGBA_orange,
     SolidColorMaterial,
     np,
     packets,
@@ -301,7 +289,7 @@ def _(
                 cartesian=[0, 0, 0]
             ),  # required to create a Polyline(), and is ignored by czml3-ext
             material=PolylineMaterial(
-                solidColor=SolidColorMaterial(color=Color(rgba=RGBA_orange))
+                solidColor=SolidColorMaterial(color=Color(rgbaf=Colour("orange").rgba))
             ),
         ),  # a kwarg that is not a sequence will be applied to all sensors
         ellipsoid=Ellipsoid(
@@ -310,10 +298,10 @@ def _(
             ),  # required to create an Ellipsoid(), and is ignored by czml3-ext
             material=Material(
                 solidColor=SolidColorMaterial(
-                    color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                    color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
-            outlineColor=Color(rgba=RGBA_orange),
+            outlineColor=Color(rgbaf=Colour("orange").rgba),
             fill=True,
             outline=True,
         ),
@@ -361,10 +349,8 @@ def _(mo):
 
 
 @app.cell
-def _(RGBA_blue, RGBA_orange, RGBA_white, create_palette, ddm_LLA_points):
-    rgba = create_palette(
-        [RGBA_blue, RGBA_white, RGBA_orange, RGBA_blue], ddm_LLA_points.shape[0]
-    )
+def _(Colour, ddm_LLA_points):
+    rgba = list(Colour("blue").range_to(Colour("white"), ddm_LLA_points.shape[0]))
     return (rgba,)
 
 
@@ -377,6 +363,7 @@ def _(mo):
 @app.cell
 def _(
     Color,
+    Colour,
     Material,
     Polygon,
     PositionList,
@@ -391,15 +378,18 @@ def _(
         polygon=[
             Polygon(
                 positions=PositionList(cartographicDegrees=[0, 0, 0]),
-                material=Material(solidColor=SolidColorMaterial(color=Color(rgba=c))),
-                outlineColor=Color(rgba=[255, 255, 255, 255]),
+                material=Material(
+                    solidColor=SolidColorMaterial(color=Color(rgbaf=c.rgba))
+                ),
+                outlineColor=Color(rgbaf=Colour("white").rgba),
                 outline=True,
             )
             for c in rgba
         ],
         name=[f"Square {i}" for i in range(len(rgba))],
         description=[
-            f"Colour: [{c[0]:.2f}, {c[1]:.2f}, {c[2]:.2f}, {c[3]:.2f}]" for c in rgba
+            f"Colour: [{c.rgba[0]:.2f}, {c.rgba[1]:.2f}, {c.rgba[2]:.2f}, {c.rgba[3]:.2f}]"
+            for c in rgba
         ],
         ddm_LLA_cut=ddm_LLA_israel,
     )

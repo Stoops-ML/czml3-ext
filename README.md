@@ -46,10 +46,10 @@ sensor = packets.sensor(
         radii=EllipsoidRadii(cartesian=[0, 0, 0]),
         material=Material(
             solidColor=SolidColorMaterial(
-                color=Color(rgba=RGBA_blue.get_with_temp_alpha(100))
+                color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
             )
         ),
-        outlineColor=Color(rgba=RGBA_white),
+        outlineColor=Color(rgba=list(Colour("white").rgb)),
         fill=True,
         outline=True,
     ),
