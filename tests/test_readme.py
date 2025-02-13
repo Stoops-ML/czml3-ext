@@ -30,7 +30,7 @@ def test_readme():
                     color=Color(rgbaf=Colour("blue", alpha=0.3).rgba)
                 )
             ),
-            outlineColor=Color(rgba=Colour("white").rgb),
+            outlineColor=Color(rgba=list(Colour("white").rgb)),
             fill=True,
             outline=True,
         ),
